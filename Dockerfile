@@ -2,6 +2,7 @@ FROM debian:stable-slim
 
 RUN apt-get update && apt-get install -y \
 	wget \
+	curl \
 	python3 \
 	apt-transport-https \
 	gpg \
