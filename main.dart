@@ -17,11 +17,7 @@ Future<void> main() async {
   var teledart = TeleDart(envVars['BOT_TOKEN']!, Event(username!));
 
   teledart.start();
-
-  teledart
-    .onCommand('list')
-    .listen((message) async => message.reply("<pre>${await listDir()}</pre>", parse_mode: 'HTML'));
-
+  
   teledart
     .onUrl(RegExp('instagram'))
     .listen((message) async => message.replyVideo(await instagramVideo(message.text ?? null.toString()), disable_notification: true));
@@ -29,36 +25,6 @@ Future<void> main() async {
   teledart
     .onUrl(RegExp('tiktok'))
     .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
-  // You can even filter streams with stream processing methods
-  // See: https://www.dartlang.org/tutorials/language/streams#methods-that-modify-a-stream
-  teledart
-      .onMessage(keyword: 'dart')
-      .where((message) => message.text?.contains('telegram') ?? false)
-      .listen((message) => message.replyPhoto(
-          //  io.File('example/dash_paper_plane.png'),
-          'https://raw.githubusercontent.com/DinoLeung/TeleDart/master/example/dash_paper_plane.png',
-          caption: 'This is how Dash found the paper plane'));
-
-  // Inline mode.
-  teledart.onInlineQuery().listen((inlineQuery) => inlineQuery.answer([
-        InlineQueryResultArticle(
-            id: 'ping',
-            title: 'ping',
-            input_message_content: InputTextMessageContent(
-                message_text: '*pong*', parse_mode: 'MarkdownV2')),
-        InlineQueryResultArticle(
-            id: 'ding',
-            title: 'ding',
-            input_message_content: InputTextMessageContent(
-                message_text: '*_dong_*', parse_mode: 'MarkdownV2')),
-      ]));
-}
-
-Future<String> listDir() async {
-  io.Process process = await io.Process.start('ls', ['-l']);
-  // Wait for hte process to finish; get the exit code.
-  final results = await process.stdout.transform(io.systemEncoding.decoder).join();
-  return(results);
 }
 
 Future<dynamic> instagramVideo(String url) async {
