@@ -4,7 +4,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-import 'package:teledart/model.dart';
 import 'package:teledart/teledart.dart';
 import 'package:teledart/telegram.dart';
 
@@ -17,7 +16,7 @@ Future<void> main() async {
   var teledart = TeleDart(envVars['BOT_TOKEN']!, Event(username!));
 
   teledart.start();
-  
+
   teledart
     .onUrl(RegExp('instagram'))
     .listen((message) async => message.replyVideo(await instagramVideo(message.text ?? null.toString()), disable_notification: true));
@@ -25,6 +24,18 @@ Future<void> main() async {
   teledart
     .onUrl(RegExp('tiktok'))
     .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
+
+  teledart
+    .onChannelPost()
+    .where((message) => message.text?.contains('instagram') ?? false)
+    .listen((message) async => message.replyVideo(await instagramVideo(message.text ?? null.toString()), disable_notification: true));
+
+  teledart
+    .onChannelPost()
+    .where((message) => message.text?.contains('tiktok') ?? false)
+    .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
+
+  teledart.onChannelPost().listen((message) => print('message received'));
 }
 
 Future<dynamic> instagramVideo(String url) async {
