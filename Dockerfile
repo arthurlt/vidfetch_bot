@@ -5,6 +5,7 @@ RUN apt-get update && apt-get install -y \
 	python3 \
 	apt-transport-https \
 	gpg \
+    ffmpeg \
 	python3-mutagen \
 	python3-websockets \
 	python3-brotli \
