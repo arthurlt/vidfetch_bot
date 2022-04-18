@@ -1,6 +1,7 @@
 name: antisocial_vid_bot
 
 dependencies:
+  http: ^0.13.4
   teledart: ^0.3.4
 
 environment:

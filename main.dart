@@ -1,29 +1,34 @@
-import 'dart:io' show Platform;
-// import 'dart:io' as io;
+import 'dart:async';
+import 'dart:io' as io;
+import 'dart:convert';
 
+import 'package:http/http.dart' as http;
+
+import 'package:teledart/model.dart';
 import 'package:teledart/teledart.dart';
 import 'package:teledart/telegram.dart';
-import 'package:teledart/model.dart';
 
 Future<void> main() async {
-  final envVars = Platform.environment;
-  final username = (await Telegram(envVars['BOT_TOKEN']!).getMe()).username;
+  final envVars = io.Platform.environment;
+  var telegram = Telegram(envVars['BOT_TOKEN']!);
+  final username = (await telegram.getMe()).username;
 
   // TeleDart uses longpoll by default if no update fetcher is specified.
   var teledart = TeleDart(envVars['BOT_TOKEN']!, Event(username!));
 
   teledart.start();
 
-  // Sick of boilerplates? Reply messages like below, nice and tidy
-  // Short hands also available for answer query methods
-  teledart.onCommand('glory')
-    .listen((message) => message.reply('to Ukraine!'));
-
-  // You can also utilise regular expressions
   teledart
-      .onCommand(RegExp('hello', caseSensitive: false))
-      .listen((message) => message.reply('hi!'));
+    .onCommand('list')
+    .listen((message) async => message.reply("<pre>${await listDir()}</pre>", parse_mode: 'HTML'));
 
+  teledart
+    .onUrl(RegExp('instagram'))
+    .listen((message) async => message.replyVideo(await instagramVideo(message.text ?? null.toString()), disable_notification: true));
+
+  teledart
+    .onUrl(RegExp('tiktok'))
+    .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
   // You can even filter streams with stream processing methods
   // See: https://www.dartlang.org/tutorials/language/streams#methods-that-modify-a-stream
   teledart
@@ -47,4 +52,40 @@ Future<void> main() async {
             input_message_content: InputTextMessageContent(
                 message_text: '*_dong_*', parse_mode: 'MarkdownV2')),
       ]));
+}
+
+Future<String> listDir() async {
+  io.Process process = await io.Process.start('ls', ['-l']);
+  // Wait for hte process to finish; get the exit code.
+  final results = await process.stdout.transform(io.systemEncoding.decoder).join();
+  return(results);
+}
+
+Future<dynamic> instagramVideo(String url) async {
+  print("received instagram request");
+  final String file = 'instagram_video.mp4';
+  final result = await io.Process.run('yt-dlp', [url,'--force-overwrites' ,'-o', file]);
+  print(result.stdout);
+  return(io.File(file));
+}
+
+Future<dynamic> tiktokVideo(String url) async {
+  print("received tiktok request");
+  final String file = 'tiktok_video.mp4';
+  final fullUrl = await getFullTiktokUrl(url);
+  final result = await io.Process.run('yt-dlp', [fullUrl, '--force-overwrites', '-o', file]);
+  print(result.stdout);
+  return(io.File(file));
+}
+
+Future<String> getFullTiktokUrl(String url) async {
+  final curlProcess = await io.Process.run('curl', ['-sL', '-w %{url_effective}', '-o /dev/null', url]);
+  return(curlProcess.stdout);
+}
+
+Future<String> getTiktokTitle(String url) async {
+  final fullUrl = await getFullTiktokUrl(url);
+  var response = await http.get(Uri.parse('https://www.tiktok.com/oembed?url=${fullUrl.replaceAll(' ', '')}'));
+  var json = jsonDecode(response.body);
+  return(json['title']);
 }
