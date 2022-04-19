@@ -31,7 +31,7 @@ Future<void> main() async {
 Future<dynamic> instagramVideo(String url) async {
   print("received instagram request");
   final String file = 'instagram_video.mp4';
-  final result = await io.Process.run('yt-dlp', [url,'--force-overwrites', '--recode-video mp4', '-o', file]);
+  final result = await io.Process.run('yt-dlp', [url,'--force-overwrites', '-o', file]);
   print(result.stdout);
   return(io.File(file));
 }
@@ -39,8 +39,7 @@ Future<dynamic> instagramVideo(String url) async {
 Future<dynamic> tiktokVideo(String url) async {
   print("received tiktok request");
   final String file = 'tiktok_video.mp4';
-  final fullUrl = await getFullTiktokUrl(url);
-  final result = await io.Process.run('yt-dlp', [fullUrl, '--force-overwrites', '--recode-video mp4', '-o', file]);
+  final result = await io.Process.run('yt-dlp', [url, '--force-overwrites', '-o', file]);
   print(result.stdout);
   return(io.File(file));
 }
