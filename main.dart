@@ -25,23 +25,13 @@ Future<void> main() async {
     .onUrl(RegExp('tiktok'))
     .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
 
-  teledart
-    .onChannelPost()
-    .where((message) => message.text?.contains('instagram') ?? false)
-    .listen((message) async => message.replyVideo(await instagramVideo(message.text ?? null.toString()), disable_notification: true));
-
-  teledart
-    .onChannelPost()
-    .where((message) => message.text?.contains('tiktok') ?? false)
-    .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
-
   teledart.onChannelPost().listen((message) => print('message received'));
 }
 
 Future<dynamic> instagramVideo(String url) async {
   print("received instagram request");
   final String file = 'instagram_video.mp4';
-  final result = await io.Process.run('yt-dlp', [url,'--force-overwrites' ,'-o', file]);
+  final result = await io.Process.run('yt-dlp', [url,'--force-overwrites', '--recode-video mp4', '-o', file]);
   print(result.stdout);
   return(io.File(file));
 }
@@ -50,7 +40,7 @@ Future<dynamic> tiktokVideo(String url) async {
   print("received tiktok request");
   final String file = 'tiktok_video.mp4';
   final fullUrl = await getFullTiktokUrl(url);
-  final result = await io.Process.run('yt-dlp', [fullUrl, '--force-overwrites', '-o', file]);
+  final result = await io.Process.run('yt-dlp', [fullUrl, '--force-overwrites', '--recode-video mp4', '-o', file]);
   print(result.stdout);
   return(io.File(file));
 }
