@@ -17,15 +17,22 @@ Future<void> main() async {
 
   teledart.start();
 
+  print('Antisocial Vid Bot authenticated as... $username');
+
   teledart
     .onUrl(RegExp('instagram'))
-    .listen((message) async => message.replyVideo(await instagramVideo(message.text ?? null.toString()), disable_notification: true));
+    .listen((message) async => message.replyVideo(
+      await instagramVideo(message.text ?? null.toString()), 
+      disable_notification: true, 
+      withQuote: true));
 
   teledart
     .onUrl(RegExp('tiktok'))
-    .listen((message) async => message.replyVideo(await tiktokVideo(message.text ?? null.toString()), disable_notification: true, caption: await getTiktokTitle(message.text ?? null.toString())));
-
-  teledart.onChannelPost().listen((message) => print('message received'));
+    .listen((message) async => message.replyVideo(
+      await tiktokVideo(message.text ?? null.toString()), 
+      disable_notification: true, 
+      withQuote: true, 
+      caption: await getTiktokTitle(message.text ?? null.toString())));
 }
 
 Future<dynamic> instagramVideo(String url) async {
