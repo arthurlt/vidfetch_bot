@@ -9,10 +9,10 @@ import 'package:teledart/telegram.dart';
 
 Future<void> main() async {
   final envVars = io.Platform.environment;
-  var telegram = Telegram(envVars['BOT_TOKEN']!);
+  final telegram = Telegram(envVars['BOT_TOKEN']!);
 
   // Requires a custom-patched Bibliogram instance that will export JSON for posts
-  var bibliogramInstance = envVars['CUSTOM_BIBLIOGRAM'] ?? null;
+  final String bibliogramInstance = envVars['CUSTOM_BIBLIOGRAM'] ?? "null";
   final username = (await telegram.getMe()).username;
 
   // TeleDart uses longpoll by default if no update fetcher is specified.
@@ -27,7 +27,8 @@ Future<void> main() async {
     .listen((message) async => message.replyVideo(
       await instagramVideo(message.text!), 
       disable_notification: true, 
-      withQuote: true));
+      withQuote: true,
+      caption: await getInstagramTitle(message.text!, bibliogramInstance)));
 
   teledart
     .onUrl(RegExp('tiktok'))
@@ -45,6 +46,17 @@ Future<dynamic> instagramVideo(String url) async {
     'yt-dlp', [url,'--force-overwrites', '-o', file]);
   print(result.stdout);
   return(io.File(file));
+}
+
+Future<String> getInstagramTitle(String url, String bibliogramUrl) async {
+  if (bibliogramUrl == "null") {
+    return "";
+  }
+  List urlPathSegments = Uri.parse(url).pathSegments;
+  var response = await http.get(
+    Uri.parse('https://$bibliogramUrl/${urlPathSegments[0]}/json/${urlPathSegments[1]}'));
+  var json = jsonDecode(response.body);
+  return (json['data']['edge_media_to_caption']['edges'][0]['node']['text'].split('\n')[0]);
 }
 
 Future<dynamic> tiktokVideo(String url) async {
