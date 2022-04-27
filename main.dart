@@ -10,6 +10,7 @@ import 'package:teledart/telegram.dart';
 Future<void> main() async {
   final envVars = io.Platform.environment;
   final telegram = Telegram(envVars['BOT_TOKEN']!);
+  final urlRegExp = RegExp(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)');
 
   // Requires a custom-patched Bibliogram instance that will export JSON for posts
   final String bibliogramInstance = envVars['CUSTOM_BIBLIOGRAM'] ?? "null";
@@ -25,26 +26,26 @@ Future<void> main() async {
   teledart
     .onUrl(RegExp('instagram'))
     .listen((message) async => message.replyVideo(
-      await instagramVideo(message.text!), 
+      await instagramVideo(urlRegExp.stringMatch(message.text!)!), 
       disable_notification: true, 
       withQuote: true,
-      caption: await getInstagramTitle(message.text!, bibliogramInstance)));
+      caption: await getInstagramTitle(urlRegExp.stringMatch(message.text!)!, bibliogramInstance)));
 
   teledart
     .onUrl(RegExp('tiktok'))
     .listen((message) async => message.replyVideo(
-      await tiktokVideo(message.text!), 
+      await tiktokVideo(urlRegExp.stringMatch(message.text!)!), 
       disable_notification: true, 
       withQuote: true, 
-      caption: await getTiktokTitle(message.text!)));
+      caption: await getTiktokTitle(urlRegExp.stringMatch(message.text!)!)));
 
   teledart
     .onUrl(RegExp('redd.?it'))
-    .listen((message) async => await getRedditType(message.text!) ?? 
-      message.replyVideo(await redditVideo(message.text!),
+    .listen((message) async => await getRedditType(urlRegExp.stringMatch(message.text!)!) ?? 
+      message.replyVideo(await redditVideo(urlRegExp.stringMatch(message.text!)!),
       disable_notification: true,
       withQuote: true,
-      caption: await getRedditTitle(message.text!)));
+      caption: await getRedditTitle(urlRegExp.stringMatch(message.text!)!)));
 }
 
 Future<io.File> instagramVideo(String url) async {
