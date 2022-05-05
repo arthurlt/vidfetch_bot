@@ -54,18 +54,24 @@ Future<io.File> instagramVideo(String url) async {
   final result = await io.Process.run(
     'yt-dlp', [url,'--force-overwrites', '-o', file]);
   print(result.stdout);
-  return(io.File(file));
+  return io.File(file);
 }
 
 Future<String> getInstagramTitle(String url, String bibliogramUrl) async {
-  if (bibliogramUrl == "null") {
-    return "";
+  if (bibliogramUrl == 'null') {
+    return '';
   }
   List urlPathSegments = Uri.parse(url).pathSegments;
   var response = await http.get(
     Uri.parse('https://$bibliogramUrl/${urlPathSegments[0]}/json/${urlPathSegments[1]}'));
   var json = jsonDecode(response.body);
-  return (json['data']['edge_media_to_caption']['edges'][0]['node']['text'].split('\n')[0]);
+  try {
+    String caption = json['data']['edge_media_to_caption']['edges'][0]['node']['text'].split('\n')[0];
+    return caption;
+  } on RangeError {
+    // Caption is likely empty
+    return '';
+  }
 }
 
 Future<io.File> tiktokVideo(String url) async {
@@ -74,13 +80,13 @@ Future<io.File> tiktokVideo(String url) async {
   final result = await io.Process.run(
     'yt-dlp', [url, '--force-overwrites', '-o', file]);
   print(result.stdout);
-  return(io.File(file));
+  return io.File(file);
 }
 
 Future<String> getFullURL(String url) async {
   final curlProcess = await io.Process.run(
     'curl', ['-sL', '-w %{url_effective}', '-o /dev/null', url]);
-  return(curlProcess.stdout);
+  return curlProcess.stdout;
 }
 
 Future<String> getTiktokTitle(String url) async {
@@ -88,7 +94,7 @@ Future<String> getTiktokTitle(String url) async {
   var response = await http.get(
     Uri.parse('https://www.tiktok.com/oembed?url=${fullUrl.replaceAll(' ', '')}'));
   var json = jsonDecode(response.body);
-  return(json['title']);
+  return json['title'];
 }
 
 Future<io.File> redditVideo(String url) async {
@@ -97,7 +103,7 @@ Future<io.File> redditVideo(String url) async {
   final result = await io.Process.run(
     'yt-dlp', [url,'--force-overwrites', '-o', file]);
   print(result.stdout);
-  return(io.File(file));
+  return io.File(file);
 }
 
 Future<String> getRedditTitle(String url) async {
@@ -105,7 +111,7 @@ Future<String> getRedditTitle(String url) async {
   var response = await http.get(
     Uri.parse('${fullUrl.replaceAll(' ', '')}.json'));
   var json = jsonDecode(response.body);
-  return(json[0]['data']['children'][0]['data']['title']);
+  return json[0]['data']['children'][0]['data']['title'];
 }
 
 Future<bool?> getRedditType(String url) async {
