@@ -23,13 +23,13 @@ Future<void> main() async {
 
   print('Antisocial Vid Bot authenticated as... $username');
 
-  teledart
-    .onUrl(RegExp('instagram'))
-    .listen((message) async => message.replyVideo(
-      await instagramVideo(urlRegExp.stringMatch(message.text!)!), 
-      disable_notification: true, 
-      withQuote: true,
-      caption: await getInstagramTitle(urlRegExp.stringMatch(message.text!)!, bibliogramInstance)));
+//   teledart   
+//     .onUrl(RegExp('instagram'))
+//     .listen((message) async => message.replyVideo(
+//       await instagramVideo(urlRegExp.stringMatch(message.text!)!),
+//       disable_notification: true,
+//       withQuote: true,
+//       caption: await getInstagramTitle(urlRegExp.stringMatch(message.text!)!, bibliogramInstance)));
 
   teledart
     .onUrl(RegExp('tiktok'))
