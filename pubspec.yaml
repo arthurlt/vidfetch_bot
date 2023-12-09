@@ -1,8 +1,9 @@
+---
 name: antisocial_vid_bot
+version: 0.2.0
 
 dependencies:
-  http: ^0.13.4
-  teledart: ^0.3.4
+  teledart: ^0.6.1
 
 environment:
-  sdk: '>=2.12.0 <3.0.0'
+  sdk: '>=3.0.0 <4.0.0'

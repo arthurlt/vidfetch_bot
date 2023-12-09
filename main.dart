@@ -2,127 +2,143 @@ import 'dart:async';
 import 'dart:io' as io;
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
-
-import 'package:teledart/teledart.dart';
 import 'package:teledart/telegram.dart';
+import 'package:teledart/teledart.dart';
+import 'package:teledart/model.dart';
+
+enum ytDlpFile { video, thumbnail, json }
 
 Future<void> main() async {
-  final envVars = io.Platform.environment;
-  final telegram = Telegram(envVars['BOT_TOKEN']!);
-  final urlRegExp = RegExp(r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)');
+  const String tokenEnvVar = 'BOT_TOKEN';
+  final Map<String, String?> envVars = io.Platform.environment;
+  late String botToken;
 
-  // Requires a custom-patched Bibliogram instance that will export JSON for posts
-  final String bibliogramInstance = envVars['CUSTOM_BIBLIOGRAM'] ?? "null";
-  final username = (await telegram.getMe()).username;
+  if (validateString(envVars[tokenEnvVar])) {
+    botToken = envVars[tokenEnvVar]!;
+  } else {
+    throw 'No bot token provided!! Make sure $tokenEnvVar is properly set as an environment variable.';
+  }
 
+  final String? username = (await Telegram(botToken).getMe()).username;
   // TeleDart uses longpoll by default if no update fetcher is specified.
-  var teledart = TeleDart(envVars['BOT_TOKEN']!, Event(username!));
+  var teledart = TeleDart(botToken, Event(username!));
 
   teledart.start();
 
   print('Antisocial Vid Bot authenticated as... $username');
 
-//   teledart   
-//     .onUrl(RegExp('instagram'))
-//     .listen((message) async => message.replyVideo(
-//       await instagramVideo(urlRegExp.stringMatch(message.text!)!),
-//       disable_notification: true,
-//       withQuote: true,
-//       caption: await getInstagramTitle(urlRegExp.stringMatch(message.text!)!, bibliogramInstance)));
-
   teledart
-    .onUrl(RegExp('tiktok'))
-    .listen((message) async => message.replyVideo(
-      await tiktokVideo(urlRegExp.stringMatch(message.text!)!), 
-      disable_notification: true, 
-      withQuote: true, 
-      caption: await getTiktokTitle(urlRegExp.stringMatch(message.text!)!)));
-
-  teledart
-    .onUrl(RegExp('redd.?it'))
-    .listen((message) async => await getRedditType(urlRegExp.stringMatch(message.text!)!) ?? 
-      message.replyVideo(await redditVideo(urlRegExp.stringMatch(message.text!)!),
-      disable_notification: true,
-      withQuote: true,
-      caption: await getRedditTitle(urlRegExp.stringMatch(message.text!)!)));
+      .onMessage(entityType: 'url')
+      .listen((message) => processMessage(message));
 }
 
-Future<io.File> instagramVideo(String url) async {
-  print("received instagram request");
-  final String file = '/tmp/video.mp4';
-  final result = await io.Process.run(
-    'yt-dlp', [url,'--force-overwrites', '-o', file]);
-  print(result.stdout);
-  return io.File(file);
+bool validateString(final String? string) {
+  return string?.isNotEmpty ?? false;
 }
 
-Future<String> getInstagramTitle(String url, String bibliogramUrl) async {
-  if (bibliogramUrl == 'null') {
-    return '';
+Future<void> processMessage(final TeleDartMessage message) async {
+  if (!validateString(message.text)) {
+    message.reply(
+        'Error, your message appears to be empty?? \n Something has gone wrong.',
+        withQuote: true);
+    return;
   }
-  List urlPathSegments = Uri.parse(url).pathSegments;
-  var response = await http.get(
-    Uri.parse('https://$bibliogramUrl/${urlPathSegments[0]}/json/${urlPathSegments[1]}'));
-  var json = jsonDecode(response.body);
-  try {
-    String caption = json['data']['edge_media_to_caption']['edges'][0]['node']['text'].split('\n')[0];
-    return caption;
-  } on RangeError {
-    // Caption is likely empty
-    return '';
+
+  final RegExp urlRegex = RegExp(
+      r'https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()!@:%_\+.~#?&\/\/=]*)');
+  final Iterable<Match> urlMatches = urlRegex.allMatches(message.text!);
+
+  print(
+      'found ${urlMatches.length} URL(s) from ${message.from?.username} in ${message.chat.title}');
+  for (final Match urlMatch in urlMatches) {
+    final String url = urlMatch[0]!;
+    final String downloadDir =
+        '/tmp/yt-dlp-${message.messageId}-${urlMatch.hashCode}';
+    print(url);
+
+    // Testing if yt-dlp can process the video
+    final io.ProcessResult simulateResult = await runYtDlp(url, simulate: true);
+    if (simulateResult.exitCode != 0) {
+      publicError(
+          message, 'yt-dlp failed to process $url\n${simulateResult.stderr}');
+      continue;
+    }
+    // Using yt-dlp to download the video
+    final io.ProcessResult downloadResult = await runYtDlp(url, dir: downloadDir);
+    if (downloadResult.exitCode != 0) {
+      publicError(
+          message, 'yt-dlp failed to download $url\n${downloadResult.stderr}');
+      continue;
+    }
+    // TODO: make sure these files exist
+    // TODO: make sure the video files is under 50mb
+    final Map<ytDlpFile, io.File> files = {
+      ytDlpFile.video: io.File('$downloadDir/video.mp4'),
+      ytDlpFile.thumbnail: io.File('$downloadDir/video.jpg'),
+      ytDlpFile.json: io.File('$downloadDir/video.info.json')
+    };
+    final Map videoInfo = jsonDecode(files[ytDlpFile.json]!.readAsStringSync());
+
+    await message.replyVideo(files[ytDlpFile.video],
+      duration: (videoInfo['duration']).round(),
+      width: videoInfo['width'],
+      height: videoInfo['height'],
+      caption: generateCaption(videoInfo),
+      //thumbnail: files[ytDlpFile.thumbnail],
+      thumbnail: videoInfo['thumbnail'],
+      withQuote: true);
+
+    io.Directory(downloadDir).deleteSync(recursive: true);
   }
 }
 
-Future<io.File> tiktokVideo(String url) async {
-  print("received tiktok request");
-  final String file = '/tmp/video.mp4';
-  final result = await io.Process.run(
-    'yt-dlp', [url, '--force-overwrites', '-o', file]);
-  print(result.stdout);
-  return io.File(file);
-}
-
-Future<String> getFullURL(String url) async {
-  final curlProcess = await io.Process.run(
-    'curl', ['-sL', '-w %{url_effective}', '-o /dev/null', url]);
-  return curlProcess.stdout;
-}
-
-Future<String> getTiktokTitle(String url) async {
-  final fullUrl = await getFullURL(url);
-  var response = await http.get(
-    Uri.parse('https://www.tiktok.com/oembed?url=${fullUrl.replaceAll(' ', '')}'));
-  var json = jsonDecode(response.body);
-  return json['title'];
-}
-
-Future<io.File> redditVideo(String url) async {
-  print("received reddit request");
-  final String file = '/tmp/video.mp4';
-  final result = await io.Process.run(
-    'yt-dlp', [url,'--force-overwrites', '-o', file]);
-  print(result.stdout);
-  return io.File(file);
-}
-
-Future<String> getRedditTitle(String url) async {
-  final fullUrl = await getFullURL(url);
-  var response = await http.get(
-    Uri.parse('${fullUrl.replaceAll(' ', '')}.json'));
-  var json = jsonDecode(response.body);
-  return json[0]['data']['children'][0]['data']['title'];
-}
-
-Future<bool?> getRedditType(String url) async {
-  final fullUrl = await getFullURL(url);
-  var response = await http.get(
-    Uri.parse('${fullUrl.replaceAll(' ', '')}.json'));
-  var json = jsonDecode(response.body);
-  print('Post type is: ${json[0]['data']['children'][0]['data']['post_hint']}');
-  if (RegExp('video').hasMatch(json[0]['data']['children'][0]['data']['post_hint'])) {
-    return null;
+// Provide with a json decoded Map of the yt-dlp info.json file
+// TODO: remove hashtags in caption
+String generateCaption(final Map info) {
+  final RegExp regex = RegExp(r'#\w+\s*');
+  final String caption;
+  if (!validateString(info['description'])) {
+    caption = info['title'];
   } else {
-    return false;
+    caption = info['description'];
   }
+  return caption.replaceAll(regex, '');
+}
+
+void publicError(final TeleDartMessage message, final String error) {
+  print('Error!! \n$error');
+  message.reply(error, withQuote: true, disableNotification: true);
+}
+
+// TODO: extend ProcessResult class to return some more data
+Future<io.ProcessResult> runYtDlp(final String videoUrl,
+    {final bool simulate = false, String dir = '/tmp'}) {
+  List<String> args = [
+    '--write-info-json',
+    //format conversion is failing https://github.com/yt-dlp/yt-dlp/issues/6866
+    //'--write-thumbnail',
+    //'--convert-thumbnails',
+    //'jpg',
+    '--remux-video',
+    'mp4',
+    '--output',
+    'video.%(ext)s',
+    videoUrl
+  ];
+
+  if (simulate) {
+    args = args + ['--simulate'];
+  }
+
+  if (!io.Directory(dir).existsSync()) {
+    try {
+      io.Directory(dir).createSync(recursive: true);
+    } catch (e) {
+      print('Exception details:\n $e');
+      print('Setting dir to /tmp as fallback');
+      dir = '/tmp';
+    }
+  }
+
+  return io.Process.run('yt-dlp', args, workingDirectory: dir);
 }
