@@ -1,8 +1,9 @@
+---
 name: Docker CI (latest)
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   packages: write
@@ -35,4 +36,3 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.TAG }}
-
