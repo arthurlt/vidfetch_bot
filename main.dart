@@ -57,17 +57,16 @@ Future<void> processMessage(final TeleDartMessage message) async {
     print(url);
 
     // Testing if yt-dlp can process the video
+    // TODO: implement way to sendChatAction while processing & downloading
     final io.ProcessResult simulateResult = await runYtDlp(url, simulate: true);
     if (simulateResult.exitCode != 0) {
-      publicError(
-          message, 'yt-dlp failed to process $url\n${simulateResult.stderr}');
+      print('yt-dlp failed to process $url\n${simulateResult.stderr}');
       continue;
     }
     // Using yt-dlp to download the video
     final io.ProcessResult downloadResult = await runYtDlp(url, dir: downloadDir);
     if (downloadResult.exitCode != 0) {
-      publicError(
-          message, 'yt-dlp failed to download $url\n${downloadResult.stderr}');
+      print('yt-dlp failed to download $url\n${downloadResult.stderr}');
       continue;
     }
     // TODO: make sure these files exist
@@ -103,11 +102,6 @@ String generateCaption(final Map info) {
     caption = info['description'];
   }
   return caption.replaceAll(regex, '');
-}
-
-void publicError(final TeleDartMessage message, final String error) {
-  print('Error!! \n$error');
-  message.reply(error, withQuote: true, disableNotification: true);
 }
 
 // TODO: extend ProcessResult class to return some more data
