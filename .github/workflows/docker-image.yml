@@ -11,7 +11,7 @@ permissions:
 env:
   TAG: latest
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: vidfetch_bot
 
 jobs:
   build:
