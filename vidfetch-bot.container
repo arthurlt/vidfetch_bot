@@ -1,0 +1,14 @@
+[Unit]
+Description=A Telegram bot
+
+[Container]
+Image=ghcr.io/arthurlt/vidfetch_bot:latest
+Environment="BOT_TOKEN="
+#AutoUpdate=registry
+
+[Service]
+Restart=always
+TimeoutStartSec=300
+
+[Install]
+WantedBy=multi-user.target default.target
