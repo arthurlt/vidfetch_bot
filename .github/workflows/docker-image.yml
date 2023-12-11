@@ -11,7 +11,7 @@ permissions:
 env:
   TAG: latest
   REGISTRY: ghcr.io
-  IMAGE_NAME: vidfetch_bot
+  IMAGE_NAME: arthurlt/vidfetch_bot
 
 jobs:
   build:
