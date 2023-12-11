@@ -1,19 +1,12 @@
-FROM dart:stable AS build
+FROM python:3.11-alpine
 
-WORKDIR /app
-COPY pubspec.yaml ./
-RUN dart pub get
+WORKDIR /opt/vidfetch_bot
 
-COPY . .
-RUN dart pub get --offline
-RUN dart compile exe main.dart -o main
+COPY requirements.txt ./
 
+RUN apk --no-cache add yt-dlp py3-wheel &&\
+	pip install --no-cache-dir -r requirements.txt
 
-FROM alpine:latest
+COPY *.py .
 
-RUN apk --no-cache add yt-dlp
-
-COPY --from=build /runtime/ /
-COPY --from=build /app/main /app/
-
-CMD [ "/app/main" ]
+CMD [ "python", "./main.py" ]
