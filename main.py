@@ -17,6 +17,8 @@ from aiogram.utils.chat_action import ChatActionMiddleware
 dp = Dispatcher()
 dp.message.middleware(ChatActionMiddleware())
 
+fifty_mb = 52428800
+
 class yt_dlp_file(Enum):
     VIDEO = 'video.mp4'
     THUMBNAIL = 'video.jpg'
@@ -137,6 +139,13 @@ class EntityTypeFilter(Filter):
             print(message.entities)
             return any([self.filter_type in entity.type for entity in message.entities])
 
+# TODO: support text_link type
+#   looks like that then provides the url via the entity.url
+
+# TODO: if we're able to send the video delete the original message
+#   make sure the OP gets credit
+#   also make the caption link to the video
+# TODO: specifically handle slideshow tiktoks
 @dp.message(EntityTypeFilter('url'))
 @flags.chat_action("upload_video")
 async def url_handler(message: Message) -> None:
@@ -171,6 +180,20 @@ async def url_handler(message: Message) -> None:
                 video_info = json.load(j)
         except:
             print(f"Failed to open the JSON")
+            continue
+
+        try:
+            video_size = os.path.getsize(f"{download_dir}/video.mp4")
+        except:
+            print(f"Failed to open the video")
+            continue
+
+        # TODO: implement way to shrink video size
+        if not video_size < fifty_mb:
+            await message.reply(
+                f"Video is larger that 50MB limit",
+                disable_notification=True
+            )
             continue
 
         try:
