@@ -187,12 +187,14 @@ async def url_handler(message: Message) -> None:
         except:
             print(f"Failed sending video reply")
             continue
+        finally:
+            try:
+                rmtree(download_dir)
+            except:
+                print(f"Failed to delete directory")
+                continue
 
-        try:
-            rmtree(download_dir)
-        except:
-            print(f"Failed to delete directory")
-            continue
+
 
 async def main() -> None:
     """
