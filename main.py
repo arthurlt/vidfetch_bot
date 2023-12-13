@@ -7,10 +7,16 @@ import json
 
 from enum import Enum
 from shutil import rmtree
+from typing import Text
+
 from aiogram import Bot, Dispatcher, flags
 from aiogram.enums import ParseMode
-from aiogram.types import Message, FSInputFile
+from aiogram.methods.delete_message import DeleteMessage
+from aiogram.methods.send_message import SendMessage
+from aiogram.types import Message, FSInputFile, video
 from aiogram.filters import Filter
+from aiogram.utils.formatting import Text
+from aiogram.utils.markdown import hbold, hlink
 from aiogram.utils.chat_action import ChatActionMiddleware
 
 # All handlers should be attached to the Router (or Dispatcher)
@@ -53,7 +59,8 @@ def get_substring(string, offset, length):
     end_index = min(offset + length, len(string))
     return string[offset:end_index]
 
-def generate_caption(info):
+# TODO: shrink caption to be no more than 3 lines
+def generate_caption(info, user):
     """
     Generates a caption from a dictionary of information.
 
@@ -80,9 +87,37 @@ def generate_caption(info):
         caption = info["description"]
 
     # Remove hashtags from the caption
-    caption = regex.sub("", caption)
+    caption = f"<b><a href='tg://user?id={user.id}'>{user.first_name}</a> sent ↑\nCaption:\n</b>{regex.sub('', caption)}"
 
     return caption
+
+
+# def launch_yt_dlp(dir="/tmp", extra_opts={}):
+#     if not os.path.exists(dir):
+#         try:
+#             os.makedirs(dir)
+#         except Exception as e:
+#             print(f"Exception during directory creation: {e}")
+#             print("Setting dir to /tmp as fallback")
+#             dir = "/tmp"
+
+#     ydl_opts = {
+#         'final_ext': 'mp4',
+#         'fragment_retries': 10,
+#         'ignoreerrors': 'only_download',
+#         'paths': {'home': dir},
+#         'postprocessors': [
+#             {'key': 'FFmpegVideoRemuxer', 'preferedformat': 'mp4'}
+#         ],
+#         'restrictfilenames': True,
+#         'retries': 10,
+#         'trim_file_name': 8
+#     }
+#     if extra_opts:
+#         ydl_opts.
+#     with YoutubeDL(ydl_opts) as ydl:
+#         return ydl
+
 
 async def run_yt_dlp(video_url, simulate=False, dir="/tmp"):
     """
@@ -147,7 +182,7 @@ class EntityTypeFilter(Filter):
 #   also make the caption link to the video
 # TODO: specifically handle slideshow tiktoks
 @dp.message(EntityTypeFilter('url'))
-@flags.chat_action("upload_video")
+@flags.chat_action(initial_sleep=2, action="upload_video", interval=2)
 async def url_handler(message: Message) -> None:
     """
     """
@@ -163,7 +198,7 @@ async def url_handler(message: Message) -> None:
         download_dir = f"/tmp/yt-dlp-{message.message_id}-{hash(url)}";
         print(f"{url} received from {message.from_user.username} in {message.chat.title}")
 
-        simulate_result = await run_yt_dlp(video_url=url, simulate=True ,dir=download_dir)
+        simulate_result = await run_yt_dlp(video_url=url,simulate=True,dir=download_dir)
         if simulate_result.returncode != 0:
             print(f"yt-dlp failed to process {url}\n{simulate_result.stderr}")
             continue
@@ -173,7 +208,6 @@ async def url_handler(message: Message) -> None:
             print(f"yt-dlp failed to download {url}\n{download_result.stderr}")
             continue
 
-        # TODO: make sure the video file is under 50mb
         try:
             print(f"{download_dir}/video.info.json")
             with open(f"{download_dir}/video.info.json") as j:
@@ -189,6 +223,7 @@ async def url_handler(message: Message) -> None:
             continue
 
         # TODO: implement way to shrink video size
+        # TODO: determine video size before downloading
         if not video_size < fifty_mb:
             await message.reply(
                 f"Video is larger that 50MB limit",
@@ -196,19 +231,19 @@ async def url_handler(message: Message) -> None:
             )
             continue
 
+        # TODO: upload file and send message separately?
         try:
-            await message.reply_video(
+            await message.answer_video(
                 video=FSInputFile(path=f"{download_dir}/video.mp4"),
                 duration=int(video_info['duration']),
                 width=video_info['width'],
                 height=video_info['height'],
-                caption=generate_caption(video_info),
-                #thumbnail:f"{download_dir}/{yt_dlp_file.THUMBNAIL}",
-                #thumbnail=video_info['thumbnail'],
+                caption=generate_caption(video_info, message.from_user),
                 disable_notification=True
             )
         except:
             print(f"Failed sending video reply")
+            raise
             continue
         finally:
             try:
@@ -216,6 +251,9 @@ async def url_handler(message: Message) -> None:
             except:
                 print(f"Failed to delete directory")
                 continue
+
+        # TODO: change behavior depending on if admin rights in chat
+        await message.delete()
 
 
 
