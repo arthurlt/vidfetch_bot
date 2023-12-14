@@ -5,18 +5,12 @@ import re
 import os
 import json
 
-from enum import Enum
+from enum import Enum, member
 from shutil import rmtree
-from typing import Text
 
-from aiogram import Bot, Dispatcher, flags
+from aiogram import Bot, Dispatcher, flags, types
 from aiogram.enums import ParseMode
-from aiogram.methods.delete_message import DeleteMessage
-from aiogram.methods.send_message import SendMessage
-from aiogram.types import Message, FSInputFile, video
-from aiogram.filters import Filter
-from aiogram.utils.formatting import Text
-from aiogram.utils.markdown import hbold, hlink
+from aiogram.filters import Command, CommandStart, Filter
 from aiogram.utils.chat_action import ChatActionMiddleware
 
 # All handlers should be attached to the Router (or Dispatcher)
@@ -30,7 +24,20 @@ class yt_dlp_file(Enum):
     THUMBNAIL = 'video.jpg'
     JSON = 'video.info.json'
 
-def validate_string(string):
+class EntityTypeFilter(Filter):
+    """
+    """
+    def __init__(self, filter_type: str) -> None:
+        self.filter_type = filter_type
+
+    async def __call__(self, message: types.Message) -> bool:
+        if message.entities is None:
+            return False
+        else:
+            print(message.entities)
+            return any([self.filter_type in entity.type for entity in message.entities])
+
+def validate_string(string: str) -> bool:
     """
     Checks if a string is not None and not empty.
 
@@ -42,7 +49,7 @@ def validate_string(string):
     """
     return string is not None and len(string) > 0
 
-def get_substring(string, offset, length):
+def get_substring(string: str, offset: int, length: int) -> str:
     """
     Extracts a substring from a string based on offset and length.
 
@@ -60,7 +67,7 @@ def get_substring(string, offset, length):
     return string[offset:end_index]
 
 # TODO: shrink caption to be no more than 3 lines
-def generate_caption(info, user):
+def generate_caption(info: dict, user: types.User, reply=False) -> str:
     """
     Generates a caption from a dictionary of information.
 
@@ -79,18 +86,39 @@ def generate_caption(info, user):
     caption = ""
 
     # Check if the description is valid
-    if not validate_string(info.get("description")):
+    if not validate_string(info["description"]):
         # Use the title if no valid description is provided
         caption = info["title"]
     else:
         # Use the description if available
         caption = info["description"]
 
-    # Remove hashtags from the caption
-    caption = f"<b><a href='tg://user?id={user.id}'>{user.first_name}</a> sent ↑\nCaption:\n</b>{regex.sub('', caption)}"
+    if reply:
+        return regex.sub('', caption)
 
-    return caption
+    template = "<b><a href='tg://user?id={}'>{}</a> <a href='{}'>sent ↑</a></b>\n{}"
 
+    return template.format(
+        user.id,
+        user.first_name,
+        info["webpage_url"],
+        regex.sub('', caption)
+    )
+
+async def has_delete_permissions(message: types.Message) -> bool:
+    # Something went wrong
+    if message.bot is None:
+        return False
+
+    if message.chat.type == "private":
+        return True
+
+    member = await message.bot.get_chat_member(message.chat.id, message.bot.id)
+
+    if isinstance(member, types.ChatMemberAdministrator) and member.can_delete_messages:
+        return True
+    else:
+        return False
 
 # def launch_yt_dlp(dir="/tmp", extra_opts={}):
 #     if not os.path.exists(dir):
@@ -100,7 +128,6 @@ def generate_caption(info, user):
 #             print(f"Exception during directory creation: {e}")
 #             print("Setting dir to /tmp as fallback")
 #             dir = "/tmp"
-
 #     ydl_opts = {
 #         'final_ext': 'mp4',
 #         'fragment_retries': 10,
@@ -119,7 +146,7 @@ def generate_caption(info, user):
 #         return ydl
 
 
-async def run_yt_dlp(video_url, simulate=False, dir="/tmp"):
+async def run_yt_dlp(video_url: str, simulate=False, dir="/tmp") -> asyncio.subprocess.Process:
     """
     Downloads a YouTube video using yt-dlp.
     Args:
@@ -159,39 +186,30 @@ async def run_yt_dlp(video_url, simulate=False, dir="/tmp"):
         "yt-dlp", *args, cwd=dir
     )
     await process.wait()
+    # TODO: also return paths for files
     return process
 
-class EntityTypeFilter(Filter):
-    """
-    """
-    def __init__(self, filter_type: str) -> None:
-        self.filter_type = filter_type
+async def send_video(message: types.Message, info: dict) -> None:
+    pass
 
-    async def __call__(self, message: Message) -> bool:
-        if message.entities is None:
-            return False
-        else:
-            print(message.entities)
-            return any([self.filter_type in entity.type for entity in message.entities])
 
 # TODO: support text_link type
 #   looks like that then provides the url via the entity.url
-
 # TODO: if we're able to send the video delete the original message
 #   make sure the OP gets credit
 #   also make the caption link to the video
 # TODO: specifically handle slideshow tiktoks
 @dp.message(EntityTypeFilter('url'))
-@flags.chat_action(initial_sleep=2, action="upload_video", interval=2)
-async def url_handler(message: Message) -> None:
+@flags.chat_action(initial_sleep=1, action="upload_video", interval=0.5)
+async def url_handler(message: types.Message) -> None:
     """
     """
     if message.entities is None:
-        return None
+        return
     if message.text is None:
-        return None
+        return
     if message.from_user is None:
-        return None
+        return
     for entity in message.entities:
         print(entity)
         url = get_substring(message.text, entity.offset, entity.length)
@@ -224,7 +242,7 @@ async def url_handler(message: Message) -> None:
 
         # TODO: implement way to shrink video size
         # TODO: determine video size before downloading
-        if not video_size < fifty_mb:
+        if video_size > fifty_mb:
             await message.reply(
                 f"Video is larger that 50MB limit",
                 disable_notification=True
@@ -234,7 +252,7 @@ async def url_handler(message: Message) -> None:
         # TODO: upload file and send message separately?
         try:
             await message.answer_video(
-                video=FSInputFile(path=f"{download_dir}/video.mp4"),
+                video=types.FSInputFile(path=f"{download_dir}/video.mp4"),
                 duration=int(video_info['duration']),
                 width=video_info['width'],
                 height=video_info['height'],
@@ -243,7 +261,6 @@ async def url_handler(message: Message) -> None:
             )
         except:
             print(f"Failed sending video reply")
-            raise
             continue
         finally:
             try:
@@ -255,7 +272,19 @@ async def url_handler(message: Message) -> None:
         # TODO: change behavior depending on if admin rights in chat
         await message.delete()
 
+@dp.message(CommandStart())
+async def command_start_handler(message: types.Message) -> None:
+    """
+    This handler receives messages with `/start` command
+    """
+    await message.answer(f"DM me your videos, or add me to your group chats!")
 
+@dp.message(Command("test"))
+async def command_test_handler(message: types.Message) -> None:
+    if await has_delete_permissions(message):
+        await message.answer("can delete messages")
+    else:
+        await message.answer("can't delete messages")
 
 async def main() -> None:
     """
