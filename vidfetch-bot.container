@@ -4,6 +4,7 @@ Description=A Telegram bot
 [Container]
 Image=ghcr.io/arthurlt/vidfetch_bot:latest
 Environment="BOT_TOKEN="
+Pull=newer
 #AutoUpdate=registry
 
 [Service]
