@@ -5,7 +5,8 @@ import re
 import os
 import json
 
-from enum import Enum, member
+from enum import Enum
+from pathlib import Path
 from shutil import rmtree
 
 from aiogram import Bot, Dispatcher, flags, types
@@ -164,7 +165,13 @@ async def run_yt_dlp(video_url: str, simulate=False, dir="/tmp") -> asyncio.subp
         #"--write-thumbnail",
         #"--convert-thumbnails",
         # "jpg",
-        "--remux-video",
+        "--format",
+        "bestvideo*[height<=?1080][filesize<40M]+bestaudio/best",
+        #"--format-sort",
+        #"hasvid,hasaud,quality",
+        "--max-filesize",
+        "50M",
+        "--recode-video",
         "mp4",
         "--output",
         "video.%(ext)s",
@@ -189,9 +196,14 @@ async def run_yt_dlp(video_url: str, simulate=False, dir="/tmp") -> asyncio.subp
     # TODO: also return paths for files
     return process
 
-async def send_video(message: types.Message, info: dict) -> None:
-    pass
-
+async def try_delete(message: types.Message) -> bool:
+    try:
+        await message.delete()
+    except Exception as e:
+        print(f"Exception during delete: {e}")
+        return False
+    else:
+        return True
 
 # TODO: support text_link type
 #   looks like that then provides the url via the entity.url
@@ -200,7 +212,7 @@ async def send_video(message: types.Message, info: dict) -> None:
 #   also make the caption link to the video
 # TODO: specifically handle slideshow tiktoks
 @dp.message(EntityTypeFilter('url'))
-@flags.chat_action(initial_sleep=1, action="upload_video", interval=0.5)
+@flags.chat_action(action="upload_video")
 async def url_handler(message: types.Message) -> None:
     """
     """
@@ -214,12 +226,8 @@ async def url_handler(message: types.Message) -> None:
         print(entity)
         url = get_substring(message.text, entity.offset, entity.length)
         download_dir = f"/tmp/yt-dlp-{message.message_id}-{hash(url)}";
+        video_file = Path(f"{download_dir}/video.mp4")
         print(f"{url} received from {message.from_user.username} in {message.chat.title}")
-
-        simulate_result = await run_yt_dlp(video_url=url,simulate=True,dir=download_dir)
-        if simulate_result.returncode != 0:
-            print(f"yt-dlp failed to process {url}\n{simulate_result.stderr}")
-            continue
 
         download_result = await run_yt_dlp(video_url=url,dir=download_dir)
         if download_result.returncode != 0:
@@ -227,50 +235,38 @@ async def url_handler(message: types.Message) -> None:
             continue
 
         try:
-            print(f"{download_dir}/video.info.json")
             with open(f"{download_dir}/video.info.json") as j:
                 video_info = json.load(j)
-        except:
-            print(f"Failed to open the JSON")
+        except Exception as e:
+            print(f"Exception during opening JSON: {e}")
             continue
 
-        try:
-            video_size = os.path.getsize(f"{download_dir}/video.mp4")
-        except:
-            print(f"Failed to open the video")
+        # TODO: make this a try/except block
+        if not video_file.is_file():
+            print(f"video_file is missing")
             continue
 
-        # TODO: implement way to shrink video size
-        # TODO: determine video size before downloading
-        if video_size > fifty_mb:
-            await message.reply(
-                f"Video is larger that 50MB limit",
-                disable_notification=True
-            )
-            continue
-
-        # TODO: upload file and send message separately?
+        # TODO: upload video file and respond separately
         try:
             await message.answer_video(
-                video=types.FSInputFile(path=f"{download_dir}/video.mp4"),
+                video=types.FSInputFile(path=video_file),
                 duration=int(video_info['duration']),
                 width=video_info['width'],
                 height=video_info['height'],
+                # TODO: send bool for reply to get different caption when replying
                 caption=generate_caption(video_info, message.from_user),
-                disable_notification=True
+                disable_notification=True,
+                reply_to_message_id=None if await try_delete(message) else message.message_id
             )
-        except:
-            print(f"Failed sending video reply")
-            continue
+        except Exception as e:
+            print(f"Exception during answer_video: {e}")
+            await message.reply(
+                text="I'm sorry, there was an error... \n" + message.text,
+                disable_web_page_preview=False,
+                allow_sending_without_reply=True
+            )
         finally:
-            try:
-                rmtree(download_dir)
-            except:
-                print(f"Failed to delete directory")
-                continue
-
-        # TODO: change behavior depending on if admin rights in chat
-        await message.delete()
+            rmtree(download_dir)
 
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message) -> None:
