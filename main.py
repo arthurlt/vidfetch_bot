@@ -89,7 +89,7 @@ def generate_caption(info: dict[str, Any], user: types.User, reply=False) -> str
     """
     regex = re.compile(r"#\w+\s*")
 
-    caption = ""
+    caption: str = ""
 
     # dict.get() doesn't throw an exception if the key is missing
     if not validate_string(info.get("description")):
@@ -98,7 +98,7 @@ def generate_caption(info: dict[str, Any], user: types.User, reply=False) -> str
         caption = info["description"]
 
     if reply:
-        return f"<tg-spoiler>{regex.sub('', caption)}</tg-spoiler>"
+        return f"<tg-spoiler>{regex.sub('', caption.splitlines()[0])}</tg-spoiler>"
 
     template = "<b><a href='tg://user?id={}'>{}</a> <a href='{}'>sent ↑</a></b>\n<tg-spoiler>{}</tg-spoiler>"
 
@@ -106,7 +106,7 @@ def generate_caption(info: dict[str, Any], user: types.User, reply=False) -> str
         user.id,
         user.first_name,
         info["webpage_url"],
-        regex.sub('', caption)
+        regex.sub('', caption.splitlines()[0])
     )
 
 
