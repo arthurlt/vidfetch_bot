@@ -39,7 +39,7 @@ class EntityTypeFilter(Filter):
         if message.entities is None:
             return False
         else:
-            print(message.entities)
+            logging.info(message.entities)
             return any([self.filter_type in entity.type for entity in message.entities])
 
 
@@ -168,8 +168,8 @@ async def run_yt_dlp(video_url: str, simulate=False, dir="/tmp") -> asyncio.subp
         try:
             os.makedirs(dir)
         except Exception as e:
-            print(f"Exception during directory creation: {e}")
-            print("Setting dir to /tmp as fallback")
+            logging.exception(f"Exception during directory creation: {e}")
+            logging.info("Setting dir to /tmp as fallback")
             dir = "/tmp"
     process = await asyncio.create_subprocess_exec(
         "yt-dlp", *args, cwd=dir
@@ -196,18 +196,18 @@ async def url_handler(message: types.Message) -> None:
     can_delete = await has_delete_permissions(message)
     failed_urls = []
     for entity in message.entities:
-        print(entity)
+        logging.info(entity)
         if entity.type != "url":
-            print(f"Message entity wasn't a url type")
+            logging.info(f"Message entity wasn't a url type")
             continue
         url = get_substring(message.text, entity.offset, entity.length)
         download_dir = f"/tmp/yt-dlp-{message.message_id}-{hash(url)}"
         video_file = Path(f"{download_dir}/video.mp4")
-        print(f"{url} received from {message.from_user.username} in {message.chat.title}")
+        logging.info(f"{url} received from {message.from_user.username} in {message.chat.title}")
 
         download_result = await run_yt_dlp(video_url=url, dir=download_dir)
         if download_result.returncode != 0:
-            print(f"yt-dlp failed to download {url}\n{download_result.stderr}")
+            logging.error(f"yt-dlp failed to download {url}\n{download_result.stderr}")
             failed_urls.append(url)
             continue
 
@@ -215,13 +215,13 @@ async def url_handler(message: types.Message) -> None:
             with open(f"{download_dir}/video.info.json") as j:
                 video_info = json.load(j)
         except Exception as e:
-            print(f"Exception during opening JSON: {e}")
+            logging.exception(f"Exception during opening JSON: {e}")
             failed_urls.append(url)
             continue
 
         # TODO: make this a try/except block
         if not video_file.is_file():
-            print(f"video_file is missing")
+            logging.error(f"video_file is missing")
             failed_urls.append(url)
             continue
 
@@ -238,15 +238,15 @@ async def url_handler(message: types.Message) -> None:
                 reply_to_message_id=None if can_delete else message.message_id
             )
         except Exception as e:
-            print(f"Exception during answer_video: {e}")
+            logging.exception(f"Exception during answer_video: {e}")
             failed_urls.append(url)
             continue
         finally:
             rmtree(download_dir)
     if failed_urls:
-        print(f"URLs that failed: {failed_urls}")
+        logging.warning(f"URLs that failed: {failed_urls}")
         if len(failed_urls) == len([["url" in entity.type for entity in message.entities]]):
-            print(f"All provided URLs failed processing")
+            logging.error(f"All provided URLs failed processing")
             return
         for url in failed_urls:
             try:
@@ -256,11 +256,11 @@ async def url_handler(message: types.Message) -> None:
                     disable_web_page_preview=False
                 )
             except Exception as e:
-                print(f"Exception during answer: {e}")
+                logging.exception(f"Exception during answer: {e}")
     try:
         await message.delete()
     except Exception as e:
-        print(f"Exception during delete: {e}")
+        logging.exception(f"Exception during delete: {e}")
 
 
 @dp.message(CommandStart())
