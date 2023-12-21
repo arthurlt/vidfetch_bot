@@ -171,6 +171,7 @@ async def run_yt_dlp(video_url: str, simulate=False, dir="/tmp") -> asyncio.subp
             logging.exception(f"Exception during directory creation: {e}")
             logging.info("Setting dir to /tmp as fallback")
             dir = "/tmp"
+    # TODO: have stdout and stderr go through logging
     process = await asyncio.create_subprocess_exec(
         "yt-dlp", *args, cwd=dir
     )
@@ -291,5 +292,10 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    logging.basicConfig(
+        level=logging.INFO,
+        stream=sys.stdout,
+        format='%(asctime)s %(levelname)s: %(message)s',
+        datefmt='%m/%d/%Y %I:%M:%S %p'
+    )
     asyncio.run(main())
