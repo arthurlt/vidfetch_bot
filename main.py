@@ -98,9 +98,9 @@ def generate_caption(info: dict[str, Any], user: types.User, reply=False) -> str
         caption = info["description"]
 
     if reply:
-        return regex.sub('', caption)
+        return f"<tg-spoiler>{regex.sub('', caption)}</tg-spoiler>"
 
-    template = "<b><a href='tg://user?id={}'>{}</a> <a href='{}'>sent ↑</a></b>\n{}"
+    template = "<b><a href='tg://user?id={}'>{}</a> <a href='{}'>sent ↑</a></b>\n<tg-spoiler>{}</tg-spoiler>"
 
     return template.format(
         user.id,
