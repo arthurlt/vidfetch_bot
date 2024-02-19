@@ -15,7 +15,6 @@ from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, Filter
 from aiogram.utils.chat_action import ChatActionMiddleware
 
-# All handlers should be attached to the Router (or Dispatcher)
 dp = Dispatcher()
 dp.message.middleware(ChatActionMiddleware())
 
@@ -277,7 +276,8 @@ async def command_test_handler(message: types.Message) -> None:
     # Put stuff you're testing in here
     pass
 
-
+# TODO: handle SIGTERM gracefully; finish current event before closing
+# TODO: add healthcheck for container
 async def main() -> None:
     # Bot token can be obtained via https://t.me/BotFather
     TOKEN = os.getenv("BOT_TOKEN")
