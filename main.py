@@ -158,9 +158,6 @@ async def run_yt_dlp(video_url: str, simulate=False, dir="/tmp") -> asyncio.subp
         "--restrict-filenames",
         "--trim-filenames",
         "10",
-        # workaround tiktok https://github.com/yt-dlp/yt-dlp/issues/9441
-        "--extractor-args",
-        "tiktok:api_hostname=api22-normal-c-useast2a.tiktokv.com",
         "--output",
         "video.%(ext)s",
         video_url,
