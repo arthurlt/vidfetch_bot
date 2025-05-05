@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools >= 77.0.3", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vidfetch_bot"
+authors = [
+  { name="Arthur Tucker", email="arthur@tuckerfami.ly" },
+]
+description = "This bot watches messages for URLs then passes those to yt-dlp for processing and download. It then replies to the message containing the URL with the video embedded."
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "GPL-3.0"
+license-files = ["LICENSE"]
+dependencies = [
+	"aiogram ~= 3.2",
+	"yt-dlp"
+]
+dynamic = ["version"]
+
+[project.urls]
+Homepage = "https://github.com/arthurlt/vidfetch_bot"
+Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
+
+[tool.setuptools_scm]
