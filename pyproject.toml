@@ -27,3 +27,7 @@ Homepage = "https://github.com/arthurlt/vidfetch_bot"
 Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
 
 [tool.setuptools_scm]
+
+[tool.pyright]
+venvPath = ".venv"
+# typeCheckingMode = "strict"
