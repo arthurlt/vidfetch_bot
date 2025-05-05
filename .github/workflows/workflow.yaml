@@ -2,11 +2,6 @@ name: CI/CD Workflow
 
 on:
   push:
-    branches:
-      - main
-      - "feature/**"
-    tags:
-      - v*
   pull_request:
     branches:
       - main
@@ -40,7 +35,8 @@ jobs:
           path: dist/
 
   publish-test:
-    if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+    if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
+    # if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
     needs:
       - build
     runs-on: ubuntu-latest
@@ -63,24 +59,24 @@ jobs:
         with:
           repository-url: https://test.pypi.org/legacy/
 
-  publish:
-    if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
-    needs:
-      - build
-    runs-on: ubuntu-latest
+  # publish:
+  #   if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
+  #   needs:
+  #     - build
+  #   runs-on: ubuntu-latest
 
-    environment:
-      name: pypi
-      url: https://pypi.org/p/vidfetch_bot
+  #   environment:
+  #     name: pypi
+  #     url: https://pypi.org/p/vidfetch_bot
 
-    permissions:
-      id-token: write
+  #   permissions:
+  #     id-token: write
 
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: python-package-distributions
-          path: dist/
-      - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@release/v1
+  #   steps:
+  #     - name: Download artifacts
+  #       uses: actions/download-artifact@v4
+  #       with:
+  #         name: python-package-distributions
+  #         path: dist/
+  #     - name: Publish to PyPI
+  #       uses: pypa/gh-action-pypi-publish@release/v1
