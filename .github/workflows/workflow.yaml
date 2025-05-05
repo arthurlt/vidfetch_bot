@@ -25,7 +25,9 @@ jobs:
         with:
           python-version: "3.x"
       - name: Install dependencies
-        run: python3 -m pip install build
+        run: |
+          python3 -m pip install build
+          python3 -m pip install -r requirements.txt
       - name: Build package
         run: python3 -m build
       - name: Upload artifacts
