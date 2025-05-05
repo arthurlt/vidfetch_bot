@@ -5,6 +5,8 @@ on:
     branches:
       - main
       - "feature/**"
+    tags:
+      - v*
   pull_request:
     branches:
       - main
@@ -20,23 +22,15 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-
-      - name: Set up Python 3.x
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.x"
-
-      - name: Install pypa/build
-        run: >-
-          python3 -m
-          pip install
-          build
-          --user
-
-      - name: Build a binary wheel and a source tarball
+      - name: Install requirements
+        run: python3 -m pip install build
+      - name: Build package
         run: python3 -m build
-
-      - name: Store the distribution packages
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
@@ -66,10 +60,9 @@ jobs:
           repository-url: https://test.pypi.org/legacy/
 
   publish:
-    if: startsWith(github.ref, 'refs/tags/') # only publish to PyPI on tag pushes
+    if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
     needs:
       - build
-      - publish-test
     runs-on: ubuntu-latest
 
     environment:
