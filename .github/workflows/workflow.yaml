@@ -3,8 +3,8 @@ name: CI/CD Workflow
 on:
   push:
     paths-ignore:
-      - '**.md'
-      - 'docs/**'
+      - "**.md"
+      - "docs/**"
   pull_request:
     branches:
       - main

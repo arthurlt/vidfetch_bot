@@ -28,6 +28,17 @@ Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
 
 [tool.setuptools_scm]
 
+[tool.ruff]
+exclude = [".venv"]
+line-length = 120
+
 [tool.pyright]
 venvPath = ".venv"
 # typeCheckingMode = "strict"
+include = [
+	"src/**",
+	"tests/**"
+]
+exclude = [
+	".venv/**"
+]
