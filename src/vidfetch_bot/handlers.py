@@ -75,14 +75,14 @@ async def url_handler(message: Message):
                 disable_notification=True,
             )
         except Exception as e:
-            logging.exception(f"Exception during answer_video: {e}")
+            log.exception(f"Exception during answer_video: {e}")
             failed.append(v)
         finally:
             v.delete()
     if failed:
-        logging.warning(f"URLs that failed: {failed}")
+        log.warning(f"URLs that failed: {failed}")
         if len(failed) == len(["url" in entity.type for entity in message.entities]):
-            logging.error("All provided URLs failed processing")
+            log.error("All provided URLs failed processing")
             return
         for v in failed:
             try:
@@ -92,7 +92,7 @@ async def url_handler(message: Message):
                     disable_web_page_preview=False,
                 )
             except Exception as e:
-                logging.exception(f"Exception during answer: {e}")
+                log.exception(f"Exception during answer: {e}")
 
 
 @handle.message(CommandStart())

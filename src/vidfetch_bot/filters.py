@@ -16,5 +16,5 @@ class EntityTypeFilter(Filter):
         if message.entities is None:
             return False
         else:
-            self.log.info(message.entities)
+            self.log.debug(message.entities)
             return any([self.filter_type in entity.type for entity in message.entities])
