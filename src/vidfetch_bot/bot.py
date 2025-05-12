@@ -1,6 +1,6 @@
 import logging
-import sys
 from os import environ
+from sys import stdout
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -11,8 +11,8 @@ from vidfetch_bot.handlers import handle
 
 logging.basicConfig(
     level=logging.INFO,
-    stream=sys.stdout,
-    format="%(asctime)s %(levelname)s: %(message)s",
+    stream=stdout,
+    format="%(asctime)s %(name)s %(levelname)s: %(message)s",
     datefmt="%m/%d/%Y %I:%M:%S %p",
 )
 
