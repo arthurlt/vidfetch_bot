@@ -28,15 +28,15 @@ async def url_handler(message: Message):
         url = utils.extract_entity(message.text, entity)
         log.info(f"'{url}' received from {message.from_user.username} in {message.chat.title or 'DM'}")
 
-
+        # TODO: rework this
         async def send_error(error: str, emoji: str):
             reaction = ReactionTypeEmoji(emoji=emoji)
             await message.react([reaction], is_big=emoji in ["🍌", "🌭"])
             await message.reply(text=error)
 
         v = Video(url)
-        if not v.is_valid:
-            pass
+        # if not v.is_valid:
+        #     pass
         v.download()
 
         match v.invalid_reason:
@@ -52,24 +52,25 @@ async def url_handler(message: Message):
             case InvalidReason.UNSUPPORTED_URL:
                 await send_error("unsupported url", "🤷")
                 continue
+            case _:
+                if not v.file_path:
+                    continue
 
-        if not v.file_path:
-            continue
+                height, width = v.dimensions
+                try:
+                    await message.reply_video(
+                        video=FSInputFile(path=v.file_path),
+                        duration=v.duration,
+                        width=width,
+                        height=height,
+                        caption=utils.generate_caption(v),
+                        disable_notification=True,
+                    )
+                except Exception as e:
+                    log.exception(f"Exception during answer_video: {e}")
+                finally:
+                    v.delete()
 
-        height, width = v.dimensions
-        try:
-            await message.reply_video(
-                video=FSInputFile(path=v.file_path),
-                duration=v.duration,
-                width=width,
-                height=height,
-                caption=utils.generate_caption(v, message.from_user),
-                disable_notification=True,
-            )
-        except Exception as e:
-            log.exception(f"Exception during answer_video: {e}")
-        finally:
-            v.delete()
     # if failed:
     #     log.warning(f"URLs that failed: {failed}")
     #     if len(failed) == len(["url" in entity.type for entity in message.entities]):
