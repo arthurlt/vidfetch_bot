@@ -22,7 +22,7 @@ class Video:
     max_file_size = 50 * 1024 * 1024    # 50 mebibytes
     temp_file_dir = tempfile.gettempdir()
 
-    def __init__(self, url: str, download: bool = True):
+    def __init__(self, url: str):
         """"""
         self.log = logging.getLogger(__name__)
         self.url = url
@@ -30,8 +30,6 @@ class Video:
         self.dl_percent = 0.0
         self.file_path: str | None = None
         self.invalid_reason = self.__validate()
-        if download:
-            self.download()
 
     @property
     def is_valid(self) -> bool:
