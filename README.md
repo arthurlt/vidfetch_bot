@@ -1,5 +1,18 @@
 # VidFetch_bot
-This bot watches messages for URLs then passes those to `yt-dlp` for processing and download. It then replies to the message containing the URL with the video embedded.
+
+Are you sick of your friends sending you links to TikTok, Instagram, and YouTube only to have to navigate the maze of app download and account signup redirects and popups?
+
+Just add this bot to your group's Telegram meme chat. (Or if they're using a better service just DM the bot the links.)
+
+## How to run
+
+### Docker
+
+### Quadlet
+
+### Kubernetes
+
+### systemd
 
 Supply your bot's API token via environment variable `BOT_TOKEN`.
 

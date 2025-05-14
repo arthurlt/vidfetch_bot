@@ -18,7 +18,7 @@ def generate_caption(video: Video) -> str:
     # remove all hashtags
     caption = re.sub(r"#\w+\s*", "", caption)
 
-    # remove 
+    # limit to 8 words
     if len(caption.split()) > 8:
         caption = " ".join(caption.split()[0:8]) + " ..."
 

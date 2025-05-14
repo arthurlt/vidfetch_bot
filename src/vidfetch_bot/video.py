@@ -18,8 +18,8 @@ class Video:
     """"""
 
     log: logging.Logger
-    max_duration = 600                  # 10 minutes
-    max_file_size = 50 * 1024 * 1024    # 50 mebibytes
+    max_duration = 600  # 10 minutes
+    max_file_size = 50 * 1024 * 1024  # 50 mebibytes
     temp_file_dir = tempfile.gettempdir()
 
     def __init__(self, url: str):
@@ -27,7 +27,6 @@ class Video:
         self.log = logging.getLogger(__name__)
         self.url = url
         self.info = {}
-        self.dl_percent = 0.0
         self.file_path: str | None = None
         self.invalid_reason = self.__validate()
 
@@ -120,9 +119,11 @@ class Video:
             "paths": {"home": self.temp_file_dir, "temp": self.temp_file_dir},
             "max_filesize": self.max_file_size,
             "merge_output_format": "mp4",
+            "final_ext": "mp4",
+            "postprocessors": [{"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}],
             "noprogress": True,
             "restrictfilenames": True,
-            "logger": self.log
+            "logger": self.log,
         }
         with YoutubeDL(opts) as ydl:
             ydl.download(self.url)
