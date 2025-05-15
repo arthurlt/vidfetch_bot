@@ -33,6 +33,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install build
+          python3 -m pip install -e . --config-settings editable_mode=strict
       - name: Test
         run: |
           pip install pytest pytest-cov
