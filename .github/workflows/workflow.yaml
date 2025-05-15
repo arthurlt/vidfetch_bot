@@ -15,9 +15,9 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.11", "3.12", "3.13"]
+    # strategy:
+    #   matrix:
+    #     python-version: ["3.11", "3.12", "3.13"]
 
     steps:
       - name: Checkout source
@@ -26,10 +26,11 @@ jobs:
         run: |
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-      - name: Setup Python ${{ matrix.python-version }}
+      - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.11"
+          # python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
           python3 -m pip install build
