@@ -42,6 +42,6 @@
 				"VIRTUAL_ENV": "$project_path/.venv"
 			},
 			"working_dir": "$project_path"
-		}
+		},
 	]
 }

@@ -30,7 +30,6 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install build
-          python3 -m pip install -r requirements.txt
       - name: Build package
         run: python3 -m build
       - name: Upload artifacts
@@ -40,8 +39,8 @@ jobs:
           path: dist/
 
   publish-test:
-    if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
-    # if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
+    # if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
+    if: ${{ ! startsWith(github.ref, 'refs/tags/') }}
     needs:
       - build
     runs-on: ubuntu-latest
