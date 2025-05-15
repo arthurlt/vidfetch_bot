@@ -1,0 +1,36 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+	],
+	"settings": {
+		"tab_size": 4,
+		"translate_tabs_to_spaces": true
+	},
+	"build_systems": [
+		{
+			"name": "run module",
+			"cmd": [
+				".venv/bin/python",
+				"-m",
+				"vidfetch_bot"
+			],
+			"env": {
+				"VIRTUAL_ENV": "$project_path/.venv"
+			},
+		},
+		{
+			"name": "run unit tests",
+			"cmd": [
+				"$project_path/.venv/bin/python",
+				"-m",
+				"unittest",
+			],
+			"env": {
+				"VIRTUAL_ENV": "$project_path/.venv"
+			},
+			"working_dir": "$project_path"
+		}
+	]
+}

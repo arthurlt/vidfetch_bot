@@ -36,7 +36,7 @@ line-length = 120
 venvPath = ".venv"
 # typeCheckingMode = "strict"
 include = [
-	"src/**",
+	"vidfetch_bot/**",
 	"tests/**"
 ]
 exclude = [

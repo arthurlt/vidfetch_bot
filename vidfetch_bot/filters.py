@@ -6,7 +6,7 @@ from aiogram.types import Message
 
 
 class EntityTypeFilter(Filter):
-    """ """
+    """"""
 
     def __init__(self, filter_type: MessageEntityType):
         self.log = logging.getLogger(__name__)

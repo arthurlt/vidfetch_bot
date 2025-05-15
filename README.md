@@ -14,9 +14,12 @@ Just add this bot to your group's Telegram meme chat. (Or if they're using a bet
 
 ### systemd
 
+
+## Develop
+
 Supply your bot's API token via environment variable `BOT_TOKEN`.
 
-## TODO:
+### TODO:
 - [ ] Improve README
 - [ ] Add unit tests
 - [x] Rewrite to use `yt-dlp` as library
