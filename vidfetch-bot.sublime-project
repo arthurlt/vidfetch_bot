@@ -10,6 +10,17 @@
 	},
 	"build_systems": [
 		{
+			"name": "build package",
+			"cmd": [
+				".venv/bin/python",
+				"-m",
+				"build"
+			],
+			"env": {
+				"VIRTUAL_ENV": "$project_path/.venv"
+			},
+		},
+		{
 			"name": "run module",
 			"cmd": [
 				".venv/bin/python",

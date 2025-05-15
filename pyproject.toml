@@ -28,6 +28,9 @@ Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
 
 [tool.setuptools_scm]
 
+[tool.setuptools.packages.find]
+where = ["vidfetch_bot"]
+
 [tool.ruff]
 exclude = [".venv"]
 line-length = 120
