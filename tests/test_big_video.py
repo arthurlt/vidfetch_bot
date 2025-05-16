@@ -49,7 +49,7 @@ class ValidVideoTestCase(unittest.TestCase):
     def test_download(self):
         with self.assertLogs("vidfetch_bot.video", "INFO") as cm:
             self.video.download()
-        self.assertListEqual(cm.output, ["ERROR:vidfetch_bot.video:Invalid video, won't download"])
+        self.assertListEqual(cm.output, ["WARNING:vidfetch_bot.video:Invalid video, won't download"])
         self.assertIsNone(self.video.file_path)
 
     def test_delete(self):
