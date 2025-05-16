@@ -115,15 +115,16 @@ class Video:
             return
         self.log.info("Downloading video")
         opts = {
-            "post_hooks": [self.__post_hook],
-            "paths": {"home": self.temp_file_dir, "temp": self.temp_file_dir},
+            "final_ext": "mp4",
+            "format": "best[ext=mp4]",
+            "logger": self.log,
             "max_filesize": self.max_file_size,
             "merge_output_format": "mp4",
-            "final_ext": "mp4",
-            "postprocessors": [{"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}],
             "noprogress": True,
+            "paths": {"home": self.temp_file_dir, "temp": self.temp_file_dir},
+            "post_hooks": [self.__post_hook],
+            "postprocessors": [{"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}],
             "restrictfilenames": True,
-            "logger": self.log,
         }
         with YoutubeDL(opts) as ydl:
             ydl.download(self.url)
