@@ -30,10 +30,8 @@ async def url_handler(message: Message):
         log.info(f"'{url}' received from {message.from_user.username} in {message.chat.title or 'DM'}")
 
         video = Video(url)
-        if not video.is_valid:
-            continue
-
-        video.download()
+        if video.is_valid:
+            video.download()
 
         try:
             await utils.generate_response(message, video)

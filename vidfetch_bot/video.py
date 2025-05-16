@@ -43,11 +43,11 @@ class Video:
         return self.info["title"]
 
     @property
-    def description(self) -> str:
+    def description(self) -> str | None:
         """"""
         if not self.info:
             raise KeyError
-        return self.info["description"]
+        return self.info.get("description")
 
     @property
     def duration(self) -> int:
@@ -116,7 +116,7 @@ class Video:
         self.log.info("Downloading video")
         opts = {
             "final_ext": "mp4",
-            "format": "best[ext=mp4]",
+            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
             "logger": self.log,
             "max_filesize": self.max_file_size,
             "merge_output_format": "mp4",
