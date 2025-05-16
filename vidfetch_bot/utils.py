@@ -1,11 +1,15 @@
+import logging
 import re
 
-from aiogram.types import MessageEntity
+from aiogram.methods.send_message import SendMessage
+from aiogram.methods.send_video import SendVideo
+from aiogram.methods.set_message_reaction import SetMessageReaction
+from aiogram.types import (FSInputFile, Message, MessageEntity,
+                           ReactionTypeEmoji)
 
-from vidfetch_bot.video import Video
+from vidfetch_bot.video import InvalidReason, Video
 
 
-# TODO: shrink caption to be no more than 3 lines
 def generate_caption(video: Video) -> str:
     """"""
 
@@ -28,3 +32,29 @@ def generate_caption(video: Video) -> str:
 def extract_entity(text: str, entity: MessageEntity) -> str:
     """"""
     return text[entity.offset : (entity.offset + entity.length)]
+
+
+def generate_response(message: Message, video: Video) -> SendVideo | SendMessage | SetMessageReaction:
+    log = logging.getLogger(__name__)
+    match video.invalid_reason:
+        case InvalidReason.FILE_TOO_BIG:
+            return message.reply(text="Video file is too big for Telegram. 😿")
+        case InvalidReason.VIDEO_TOO_LONG:
+            return message.reply(text="Video is longer than 10 minutes. 👺")
+        case InvalidReason.UNSUPPORTED_URL:
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🤷")])
+        case InvalidReason.DOWNLOAD_FAILED:
+            return message.reply(text="Downloading failed! 🙀")
+        case None:
+            if not video.file_path:
+                raise FileNotFoundError(f"No file path for {video.title}")
+            log.info("Sending video")
+            height, width = video.dimensions
+            return message.reply_video(
+                video=FSInputFile(video.file_path),
+                duration=video.duration,
+                height=height,
+                width=width,
+                caption=generate_caption(video),
+                disable_notification=True,
+            )

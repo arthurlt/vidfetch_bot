@@ -111,7 +111,7 @@ class Video:
     def download(self):
         """"""
         if not self.is_valid:
-            self.log.error("Invalid video, won't download")
+            self.log.warning("Invalid video, won't download")
             return
         self.log.info("Downloading video")
         opts = {
