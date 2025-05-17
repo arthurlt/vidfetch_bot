@@ -39,3 +39,5 @@ class GenerateCaptionTestCases(unittest.TestCase):
         actual = utils.generate_caption(video)
         self.assertIsInstance(actual, str)
         self.assertEqual(expected, actual)
+
+# TODO: test extract_entity and generate_response functions
