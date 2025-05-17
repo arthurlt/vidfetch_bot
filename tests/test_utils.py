@@ -1,5 +1,7 @@
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
+
+# from aiogram.methods.send_video import SendVideo
 
 from vidfetch_bot import utils
 

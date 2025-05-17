@@ -65,6 +65,7 @@ class ValidVideoTestCase(unittest.TestCase):
         self.assertListEqual(cm.output, ["INFO:vidfetch_bot.video:Deleting 'mock_path'"])
         mock_remove.assert_called_with("mock_path")
 
+
 class BigVideoTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")
     def setUp(self, mock_info):
@@ -117,6 +118,7 @@ class BigVideoTestCase(unittest.TestCase):
         with self.assertLogs("vidfetch_bot.video", "INFO") as cm:
             self.video.delete()
         self.assertListEqual(cm.output, ["WARNING:vidfetch_bot.video:No file to delete"])
+
 
 class LongVideoTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")

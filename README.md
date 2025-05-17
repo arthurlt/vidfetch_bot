@@ -21,6 +21,7 @@ Supply your bot's API token via environment variable `BOT_TOKEN`.
 
 ### TODO:
 - [ ] Improve README
+- [ ] Add/improve docstrings
 - [ ] Add unit tests
 - [x] Rewrite to use `yt-dlp` as library
 - [ ] Move Docker image build/publish to `workflow.yaml`
