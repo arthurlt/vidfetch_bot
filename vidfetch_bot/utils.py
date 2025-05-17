@@ -26,6 +26,9 @@ def generate_caption(video: Video) -> str:
     if len(caption.split()) > 8:
         caption = " ".join(caption.split()[0:8]) + " ..."
 
+    # remove leading or trailing whitespace
+    caption = caption.strip()
+
     return f"<tg-spoiler>{caption}</tg-spoiler>"
 
 
