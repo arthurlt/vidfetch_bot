@@ -15,15 +15,12 @@ class InvalidReason(Enum):
 
 
 class Video:
-    """"""
-
     log: logging.Logger
     max_duration = 600  # 10 minutes
     max_file_size = 50 * 1024 * 1024  # 50 mebibytes
     temp_file_dir = tempfile.gettempdir()
 
     def __init__(self, url: str):
-        """"""
         self.log = logging.getLogger(__name__)
         self.url = url
         self.info = {}
@@ -32,40 +29,34 @@ class Video:
 
     @property
     def is_valid(self) -> bool:
-        """"""
         return self.invalid_reason is None
 
     @property
     def title(self) -> str:
-        """"""
         if not self.info:
             raise KeyError
         return self.info["title"]
 
     @property
     def description(self) -> str | None:
-        """"""
         if not self.info:
             raise KeyError
         return self.info.get("description")
 
     @property
     def duration(self) -> int:
-        """"""
         if not self.info:
             raise KeyError
         return int(self.info["duration"])
 
     @property
     def dimensions(self) -> tuple[int, int]:
-        """"""
         if not self.info:
             raise KeyError
         return self.info["height"], self.info["width"]
 
     @property
     def filesize(self) -> int | None:
-        """"""
         if not self.info:
             raise KeyError
         if self.info.get("filesize"):
@@ -74,7 +65,6 @@ class Video:
             return int(self.info["filesize_approx"])
 
     def __validate(self) -> InvalidReason | None:
-        """"""
         if not self.info:
             try:
                 self.log.debug(f"Retrieving info for '{self.url}'")
@@ -98,7 +88,6 @@ class Video:
             return InvalidReason.FILE_TOO_BIG
 
     def __post_hook(self, filename: str):
-        """"""
         self.log.info(f"Downloaded video to '{filename}'")
         self.__actual_filesize = os.path.getsize(filename)
         if self.__actual_filesize > self.max_file_size:
@@ -109,7 +98,6 @@ class Video:
         self.file_path = filename
 
     def download(self):
-        """"""
         if not self.is_valid:
             self.log.warning("Invalid video, won't download")
             return
@@ -130,7 +118,6 @@ class Video:
             ydl.download(self.url)
 
     def delete(self):
-        """"""
         if not self.file_path:
             self.log.warning("No file to delete")
             return

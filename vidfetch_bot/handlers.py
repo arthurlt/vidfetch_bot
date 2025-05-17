@@ -16,7 +16,6 @@ handle = Router()
 @handle.message(EntityTypeFilter(MessageEntityType.URL))
 @flags.chat_action(action=ChatAction.UPLOAD_VIDEO)
 async def url_handler(message: Message):
-    """"""
     log = logging.getLogger(__name__)
     if message.entities is None:
         return

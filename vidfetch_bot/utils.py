@@ -4,15 +4,12 @@ import re
 from aiogram.methods.send_message import SendMessage
 from aiogram.methods.send_video import SendVideo
 from aiogram.methods.set_message_reaction import SetMessageReaction
-from aiogram.types import (FSInputFile, Message, MessageEntity,
-                           ReactionTypeEmoji)
+from aiogram.types import FSInputFile, Message, MessageEntity, ReactionTypeEmoji
 
 from vidfetch_bot.video import InvalidReason, Video
 
 
 def generate_caption(video: Video) -> str:
-    """"""
-
     # use video title if no description
     caption: str = video.description or video.title
 
@@ -33,7 +30,6 @@ def generate_caption(video: Video) -> str:
 
 
 def extract_entity(text: str, entity: MessageEntity) -> str:
-    """"""
     return text[entity.offset : (entity.offset + entity.length)]
 
 
