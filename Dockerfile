@@ -7,7 +7,9 @@ ENV PYTHONUNBUFFERED=1 \
     # disable the pip version warning
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
     # useless in container
-    PIP_NO_CACHE_DIR=1
+    PIP_NO_CACHE_DIR=1 \
+    # put pip packages on PATH
+    PATH=/app/.local/bin:${PATH}
 
 ARG PACKAGE_VERSION
 RUN set -ex &&\
