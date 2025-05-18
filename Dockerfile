@@ -12,8 +12,8 @@ ENV PYTHONUNBUFFERED=1 \
 ARG PACKAGE_VERSION
 RUN set -ex &&\
     # add python group & user
-    addgroup --gid 1000 python &&\
-    adduser --uid 1000 --home /app python &&\
+    groupadd --gid 1000 python &&\
+    useradd --uid 1000 --gid 1000 --home /app python &&\
     # ensure /app is owned by the python user
     chown python:python /app &&\
     # update the packages and clean up
