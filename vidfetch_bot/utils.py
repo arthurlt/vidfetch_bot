@@ -37,13 +37,13 @@ def generate_response(message: Message, video: Video) -> SendVideo | SendMessage
     log = logging.getLogger(__name__)
     match video.invalid_reason:
         case InvalidReason.FILE_TOO_BIG:
-            return message.reply(text="Video file is too big for Telegram. 😿")
+            return message.reply(text="Video file is too big for Telegram. 😿", disable_notification=True)
         case InvalidReason.VIDEO_TOO_LONG:
-            return message.reply(text="Video is longer than 10 minutes. 👺")
+            return message.reply(text="Video is longer than 10 minutes. 👺", disable_notification=True)
         case InvalidReason.UNSUPPORTED_URL:
             return message.react(reaction=[ReactionTypeEmoji(emoji="🤷")])
         case InvalidReason.DOWNLOAD_FAILED:
-            return message.reply(text="Downloading failed! 🙀")
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🙀")])
         case None:
             if not video.file_path:
                 raise FileNotFoundError(f"No file path for {video.title}")
