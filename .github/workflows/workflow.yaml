@@ -45,11 +45,21 @@ jobs:
           ruff check --output-format=github --target-version=py311
       - name: Build package
         run: python3 -m build
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-results
+          path: junit/test-results.xml
+          # name: pytest-results-${{ matrix.python-version }}
+          # path: junit/test-results-${{ matrix.python-version }}.xml
+        # Use always() to always run this step to publish test results when there are test failures
+        if: ${{ always() }}
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
+
 
   # publish-test:
   #   # if: startsWith(github.ref, 'refs/tags/') # only publish on tag pushes
