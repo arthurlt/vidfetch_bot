@@ -29,8 +29,8 @@ dependencies = [
 	"aiogram ~= 3.2",
 	"yt-dlp"
 ]
-# dynamic = ["version"]
-version = "0.0.1"
+dynamic = ["version"]
+# version = "0.0.1"
 
 [project.urls]
 Homepage = "https://github.com/arthurlt/vidfetch_bot"
