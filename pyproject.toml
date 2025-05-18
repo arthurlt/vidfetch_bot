@@ -36,7 +36,7 @@ dynamic = ["version"]
 Homepage = "https://github.com/arthurlt/vidfetch_bot"
 Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
 
-# [tool.setuptools_scm]
+[tool.setuptools_scm]
 
 [tool.setuptools.packages.find]
 include = ["vidfetch_bot"]
