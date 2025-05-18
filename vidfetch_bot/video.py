@@ -17,8 +17,13 @@ class InvalidReason(Enum):
 class Video:
     log: logging.Logger
     max_duration = 600  # 10 minutes
-    max_file_size = 50 * 1024 * 1024  # 50 mebibytes
+    max_filesize = 50 * 1024 * 1024  # 50 mebibytes
     temp_file_dir = tempfile.gettempdir()
+    common_opts = {
+        "format": f"best[filesize<{max_filesize}] / best[filesize_approx<{max_filesize}] / bv*+ba / b",
+        "format_sort": ["vcodec:avc", "res:720", "acodec:aac"],
+        "max_filesize": max_filesize,
+    }
 
     def __init__(self, url: str):
         self.log = logging.getLogger(__name__)
@@ -68,7 +73,7 @@ class Video:
         if not self.info:
             try:
                 self.log.debug(f"Retrieving info for '{self.url}'")
-                opts = {"logger": self.log}
+                opts = self.common_opts | {"logger": self.log}
                 with YoutubeDL(opts) as ydl:
                     self.info = ydl.extract_info(self.url, download=False)
             except DownloadError as e:
@@ -83,16 +88,16 @@ class Video:
             self.log.warning(f"'{self.title}' is greater than {self.max_duration} seconds")
             return InvalidReason.VIDEO_TOO_LONG
 
-        if self.filesize and self.filesize > self.max_file_size:
-            self.log.warning(f"'{self.title}' is bigger than {self.max_file_size} bytes")
+        if self.filesize and self.filesize > self.max_filesize:
+            self.log.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
             return InvalidReason.FILE_TOO_BIG
 
     def __post_hook(self, filename: str):
         self.log.info(f"Downloaded video to '{filename}'")
         self.__actual_filesize = os.path.getsize(filename)
-        if self.__actual_filesize > self.max_file_size:
+        if self.__actual_filesize > self.max_filesize:
             self.invalid_reason = InvalidReason.FILE_TOO_BIG
-            self.log.warning(f"'{self.title}' is bigger than {self.max_file_size} bytes")
+            self.log.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
             self.delete()
             return
         self.file_path = filename
@@ -102,16 +107,12 @@ class Video:
             self.log.warning("Invalid video, won't download")
             return
         self.log.info("Downloading video")
-        opts = {
-            "final_ext": "mp4",
-            "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        opts = self.common_opts | {
+            "concurrent_fragment_downloads": 8,
             "logger": self.log,
-            "max_filesize": self.max_file_size,
-            "merge_output_format": "mp4",
             "noprogress": True,
             "paths": {"home": self.temp_file_dir, "temp": self.temp_file_dir},
             "post_hooks": [self.__post_hook],
-            "postprocessors": [{"key": "FFmpegVideoConvertor", "preferedformat": "mp4"}],
             "restrictfilenames": True,
         }
         with YoutubeDL(opts) as ydl:
