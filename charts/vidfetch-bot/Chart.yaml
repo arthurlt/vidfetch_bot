@@ -1,0 +1,9 @@
+apiVersion: v2
+name: vidfetch-bot
+description: This bot watches messages for URLs then replies to the message containing the URL with the video embedded.
+
+type: application
+
+version: 0.3.2
+
+appVersion: "latest"

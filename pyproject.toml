@@ -1,0 +1,65 @@
+[build-system]
+requires = ["setuptools >= 77.0.3", "setuptools-scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vidfetch_bot"
+authors = [
+  { name="Arthur Tucker", email="firm.pin7067@fastmail.com" },
+]
+description = "This bot watches messages for URLs then passes those to yt-dlp for processing and download. It then replies to the message containing the URL with the video embedded."
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = ["TikTok", "Instagram", "YouTube", "Telegram"]
+classifiers = [
+		"Development Status :: 4 - Beta",
+		"Environment :: No Input/Output (Daemon)",
+		"Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+    "Topic :: Communications :: Chat",
+    "Topic :: Multimedia :: Sound/Audio :: Conversion"
+]
+license = "GPL-3.0"
+license-files = ["LICENSE"]
+dependencies = [
+	"aiogram ~= 3.2",
+	"yt-dlp"
+]
+dynamic = ["version"]
+# version = "0.0.1"
+
+[project.urls]
+Homepage = "https://github.com/arthurlt/vidfetch_bot"
+Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
+
+[tool.setuptools_scm]
+
+[tool.setuptools.packages.find]
+include = ["vidfetch_bot"]
+
+[tool.ruff]
+exclude = [".venv"]
+line-length = 120
+
+[tool.pyright]
+venvPath = ".venv"
+# typeCheckingMode = "strict"
+include = [
+	"vidfetch_bot/**",
+	"tests/**"
+]
+exclude = [
+	".venv/**"
+]
+
+[tool.pytest.ini_options]
+addopts = [
+    # '--cov-fail-under=98',
+    '--cov-report=html:pytest',
+    '--cov-report=term-missing',
+    '--junitxml=junit/test-results.xml'
+]
