@@ -114,7 +114,7 @@ jobs:
         with:
           tags: |
             type=pep440,pattern={{version}}
-            type=pep440,patturn={{major}}
+            type=pep440,pattern={{major}}
             type=pep440,pattern={{major}}.{{minor}}
           flavor: |
             latest=auto
