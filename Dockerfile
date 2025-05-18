@@ -20,8 +20,10 @@ RUN set -ex &&\
     apt update &&\
     apt upgrade -y &&\
     apt clean -y &&\
-    rm -rf /var/lib/apt/lists/* &&\
-    # install the vidfetch_bot package
-    pip install vidfetch_bot==${PACKAGE_VERSION}
+    rm -rf /var/lib/apt/lists/*
+
+USER python
+
+RUN pip install vidfetch_bot==${PACKAGE_VERSION}
 
 CMD [ "python3", "-m", "vidfetch_bot" ]
