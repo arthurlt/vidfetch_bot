@@ -43,3 +43,5 @@ async def url_handler(message: Message):
 async def command_start_handler(message: Message):
     """This handler receives messages with `/start` command"""
     await message.answer("DM me your videos or add me to your group chats!")
+
+# TODO: respond to DMs asking what reaction emojis mean
