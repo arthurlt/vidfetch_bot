@@ -45,10 +45,15 @@ jobs:
           pytest
       - name: Lint package
         run: |
-          pipx install ruff
+          python3 -m pip install ruff
           ruff check --output-format=github --target-version=py311 .
       - name: Build package
         run: python3 -m build
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
       - name: Publish test results
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: ${{ always() }}
