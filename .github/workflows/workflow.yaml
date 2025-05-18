@@ -11,6 +11,9 @@ on:
 
 permissions:
   contents: read
+  packages: write
+  checks: write
+  pull-requests: write
 
 jobs:
   build:
@@ -22,7 +25,8 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
-      - name: Get history and tags for SCM versioning to work
+        # for SCM versioning to work
+      - name: Get history and tags
         run: |
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
