@@ -38,7 +38,7 @@ jobs:
       - name: Test package
         run: |
           pip install pytest pytest-cov
-          pytest --junitxml=junit/test-results.xml --cov=vidfetch_bot --cov-report=xml --cov-report=html
+          pytest
       - name: Lint package
         run: |
           pipx install ruff
@@ -112,6 +112,8 @@ jobs:
         uses: docker/metadata-action@v5.7.0
         id: metadata
         with:
+          images: |
+            ghcr.io/arthurlt/vidfetch_bot
           tags: |
             type=pep440,pattern={{version}}
             type=pep440,pattern={{major}}
@@ -135,11 +137,10 @@ jobs:
         with:
           build-args: |
             PACKAGE_VERSION=${{ steps.metadata.outputs.version }}
+            DOCKER_METADATA_OUTPUT_JSON
           platforms: |
             linux/amd64
             linux/arm64
           push: true
           # TODO: improve tags and tagging logic
           # ghcr.io/arthurlt/vidfetch_bot:latest
-          tags: |
-            DOCKER_METADATA_OUTPUT_JSON
