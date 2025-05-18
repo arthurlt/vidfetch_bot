@@ -18,8 +18,10 @@ RUN set -ex &&\
     useradd --uid 1000 --gid 1000 --home /app python &&\
     # ensure /app is owned by the python user
     chown python:python /app &&\
-    # update the packages and clean up
+    # install ffmpeg
     apt update &&\
+    apt install ffmpeg --no-install-recommends --no-install-suggests -y &&\
+    # update other packages and clean up
     apt upgrade -y &&\
     apt clean -y &&\
     rm -rf /var/lib/apt/lists/*
