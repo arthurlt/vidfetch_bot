@@ -53,4 +53,5 @@ Supply your bot's API token via environment variable `BOT_TOKEN`.
 - [ ] Add (more) unit tests
 - [x] Rewrite to use `yt-dlp` as library
 - [x] Move Docker image build/publish to `workflow.yaml`
+- [ ] Improve CI vs CD workflows
 - [ ] Enable 'strict' checking for `pyright` (unsure how to handle `yt-dlp`)

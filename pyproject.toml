@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "vidfetch_bot"
 authors = [
-  { name="Arthur Tucker", email="arthur@tuckerfami.ly" },
+  { name="Arthur Tucker", email="firm.pin7067@fastmail.com" },
 ]
 description = "This bot watches messages for URLs then passes those to yt-dlp for processing and download. It then replies to the message containing the URL with the video embedded."
 readme = "README.md"
@@ -26,7 +26,7 @@ classifiers = [
 license = "GPL-3.0"
 license-files = ["LICENSE"]
 dependencies = [
-	"aiogram>=3.2,<4",
+	"aiogram ~= 3.2",
 	"yt-dlp"
 ]
 dynamic = ["version"]
