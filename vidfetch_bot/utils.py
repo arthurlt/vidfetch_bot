@@ -1,7 +1,6 @@
 import logging
 import re
 
-from aiogram.methods.send_message import SendMessage
 from aiogram.methods.send_video import SendVideo
 from aiogram.methods.set_message_reaction import SetMessageReaction
 from aiogram.types import FSInputFile, Message, MessageEntity, ReactionTypeEmoji
@@ -33,17 +32,17 @@ def extract_entity(text: str, entity: MessageEntity) -> str:
     return text[entity.offset : (entity.offset + entity.length)]
 
 
-def generate_response(message: Message, video: Video) -> SendVideo | SendMessage | SetMessageReaction:
+def generate_response(message: Message, video: Video) -> SendVideo | SetMessageReaction:
     log = logging.getLogger(__name__)
     match video.invalid_reason:
         case InvalidReason.FILE_TOO_BIG:
-            return message.reply(text="Video file is too big for Telegram. 😿", disable_notification=True)
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🐳")])
         case InvalidReason.VIDEO_TOO_LONG:
-            return message.reply(text="Video is longer than 10 minutes. 👺", disable_notification=True)
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🤨")])
         case InvalidReason.UNSUPPORTED_URL:
             return message.react(reaction=[ReactionTypeEmoji(emoji="🤷")])
         case InvalidReason.DOWNLOAD_FAILED:
-            return message.react(reaction=[ReactionTypeEmoji(emoji="🙀")])
+            return message.react(reaction=[ReactionTypeEmoji(emoji="😢")])
         case None:
             if not video.file_path:
                 raise FileNotFoundError(f"No file path for {video.title}")
