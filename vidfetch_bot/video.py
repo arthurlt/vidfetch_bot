@@ -21,7 +21,7 @@ class Video:
     temp_file_dir = tempfile.gettempdir()
     common_opts = {
         "format": f"best[filesize<{max_filesize}] / best[filesize_approx<{max_filesize}] / bv*+ba / b",
-        "format_sort": ["vcodec:avc", "res:720", "acodec:aac"],
+        "format_sort": ["vcodec:avc", "res", "acodec:aac"],
         "max_filesize": max_filesize,
     }
 
