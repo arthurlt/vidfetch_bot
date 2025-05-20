@@ -1,9 +1,12 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, create_autospec
 
 # from aiogram.methods.send_video import SendVideo
+# from aiogram.methods.set_message_reaction import SetMessageReaction
+from aiogram.types import Message, ReactionTypeEmoji
 
 from vidfetch_bot import utils
+from vidfetch_bot.video import InvalidReason
 
 
 class GenerateCaptionTestCases(unittest.TestCase):
@@ -40,4 +43,56 @@ class GenerateCaptionTestCases(unittest.TestCase):
         self.assertIsInstance(actual, str)
         self.assertEqual(expected, actual)
 
-# TODO: test extract_entity and generate_response functions
+
+class GenerateResponseTestCases(unittest.TestCase):
+    def test_too_big_reaction(self):
+        video = MagicMock()
+        video.invalid_reason = InvalidReason.FILE_TOO_BIG
+        message = create_autospec(Message)
+        actual = utils.generate_response(message, video)
+        message.react.assert_called_once_with(reaction=[ReactionTypeEmoji(emoji="🐳")])
+        self.assertIsNotNone(actual)
+
+    def test_too_long_reaction(self):
+        video = MagicMock()
+        video.invalid_reason = InvalidReason.VIDEO_TOO_LONG
+        message = create_autospec(Message)
+        actual = utils.generate_response(message, video)
+        message.react.assert_called_once_with(reaction=[ReactionTypeEmoji(emoji="🤨")])
+        self.assertIsNotNone(actual)
+
+    def test_unsupported_reaction(self):
+        video = MagicMock()
+        video.invalid_reason = InvalidReason.UNSUPPORTED_URL
+        message = create_autospec(Message)
+        actual = utils.generate_response(message, video)
+        message.react.assert_called_once_with(reaction=[ReactionTypeEmoji(emoji="🤷")])
+        self.assertIsNotNone(actual)
+
+    def test_dl_failed_reaction(self):
+        video = MagicMock()
+        video.invalid_reason = InvalidReason.DOWNLOAD_FAILED
+        message = create_autospec(Message)
+        actual = utils.generate_response(message, video)
+        message.react.assert_called_once_with(reaction=[ReactionTypeEmoji(emoji="😢")])
+        self.assertIsNotNone(actual)
+
+    def test_unauthorized_reaction(self):
+        video = MagicMock()
+        video.invalid_reason = InvalidReason.UNAUTHORIZED
+        message = create_autospec(Message)
+        actual = utils.generate_response(message, video)
+        message.react.assert_called_once_with(reaction=[ReactionTypeEmoji(emoji="🙈")])
+        self.assertIsNotNone(actual)
+
+    def test_valid_video(self):
+        video = MagicMock()
+        video.invalid_reason = None
+        video.file_path = "mock/path"
+        video.dimensions = (1080, 1920)
+        video.duration = 300
+        video.description = "Mock description"
+        message = create_autospec(Message)
+        actual = utils.generate_response(message, video)
+        message.reply_video.assert_called_once()
+        self.assertIsNotNone(actual)
