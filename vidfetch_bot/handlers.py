@@ -25,7 +25,7 @@ async def url_handler(message: Message):
         return
     for entity in message.entities:
         log.debug(entity)
-        url = utils.extract_entity(message.text, entity)
+        url = entity.extract_from(message.text)
         log.info(f"'{url}' received from {message.from_user.username} in {message.chat.title or 'DM'}")
 
         video = Video(url)

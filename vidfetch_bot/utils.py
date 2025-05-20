@@ -3,7 +3,7 @@ import re
 
 from aiogram.methods.send_video import SendVideo
 from aiogram.methods.set_message_reaction import SetMessageReaction
-from aiogram.types import FSInputFile, Message, MessageEntity, ReactionTypeEmoji
+from aiogram.types import FSInputFile, Message, ReactionTypeEmoji
 
 from vidfetch_bot.video import InvalidReason, Video
 
@@ -26,10 +26,6 @@ def generate_caption(video: Video) -> str:
     caption = caption.strip()
 
     return f"<tg-spoiler>{caption}</tg-spoiler>"
-
-
-def extract_entity(text: str, entity: MessageEntity) -> str:
-    return text[entity.offset : (entity.offset + entity.length)]
 
 
 def generate_response(message: Message, video: Video) -> SendVideo | SetMessageReaction:
