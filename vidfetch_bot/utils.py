@@ -43,6 +43,8 @@ def generate_response(message: Message, video: Video) -> SendVideo | SetMessageR
             return message.react(reaction=[ReactionTypeEmoji(emoji="🤷")])
         case InvalidReason.DOWNLOAD_FAILED:
             return message.react(reaction=[ReactionTypeEmoji(emoji="😢")])
+        case InvalidReason.UNAUTHORIZED:
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🙈")])
         case None:
             if not video.file_path:
                 raise FileNotFoundError(f"No file path for {video.title}")

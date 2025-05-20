@@ -4,7 +4,7 @@ import tempfile
 from enum import Enum, auto
 
 from yt_dlp import YoutubeDL
-from yt_dlp.utils import DownloadError, UnsupportedError
+from yt_dlp.utils import DownloadError, ExtractorError, UnsupportedError
 
 
 class InvalidReason(Enum):
@@ -12,6 +12,7 @@ class InvalidReason(Enum):
     UNSUPPORTED_URL = auto()
     VIDEO_TOO_LONG = auto()
     FILE_TOO_BIG = auto()
+    UNAUTHORIZED = auto()
 
 
 class Video:
@@ -81,6 +82,8 @@ class Video:
                 match e.exc_info:
                     case (_, UnsupportedError(), *_):
                         return InvalidReason.UNSUPPORTED_URL
+                    case (_, ExtractorError() as ee, *_) if "--cookies" in ee.msg:
+                        return InvalidReason.UNAUTHORIZED
                     case _:
                         return InvalidReason.DOWNLOAD_FAILED
 
