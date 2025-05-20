@@ -4,7 +4,7 @@ import tempfile
 from enum import Enum, auto
 
 from yt_dlp import YoutubeDL
-from yt_dlp.utils import DownloadError, UnsupportedError
+from yt_dlp.utils import DownloadError, ExtractorError, UnsupportedError
 
 
 class InvalidReason(Enum):
@@ -12,6 +12,7 @@ class InvalidReason(Enum):
     UNSUPPORTED_URL = auto()
     VIDEO_TOO_LONG = auto()
     FILE_TOO_BIG = auto()
+    UNAUTHORIZED = auto()
 
 
 class Video:
@@ -21,7 +22,7 @@ class Video:
     temp_file_dir = tempfile.gettempdir()
     common_opts = {
         "format": f"best[filesize<{max_filesize}] / best[filesize_approx<{max_filesize}] / bv*+ba / b",
-        "format_sort": ["vcodec:avc", "res:720", "acodec:aac"],
+        "format_sort": ["vcodec:avc", "res", "acodec:aac"],
         "max_filesize": max_filesize,
     }
 
@@ -81,6 +82,8 @@ class Video:
                 match e.exc_info:
                     case (_, UnsupportedError(), *_):
                         return InvalidReason.UNSUPPORTED_URL
+                    case (_, ExtractorError() as ee, *_) if "--cookies" in ee.msg:
+                        return InvalidReason.UNAUTHORIZED
                     case _:
                         return InvalidReason.DOWNLOAD_FAILED
 
