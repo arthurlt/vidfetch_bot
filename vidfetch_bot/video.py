@@ -121,6 +121,7 @@ class Video:
             "paths": {"home": self.temp_file_dir, "temp": self.temp_file_dir},
             "post_hooks": [self.__post_hook],
             "restrictfilenames": True,
+            "trim_file_name": 8,
         }
         with YoutubeDL(opts) as ydl:
             ydl.download(self.url)
