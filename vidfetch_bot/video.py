@@ -59,6 +59,10 @@ class Video:
     def dimensions(self) -> tuple[int, int]:
         if not self.info:
             raise KeyError
+        if not self.info.get("height"):
+            self.info["height"] = 0
+        if not self.info.get("width"):
+            self.info["width"] = 0
         return self.info["height"], self.info["width"]
 
     @property
