@@ -24,6 +24,8 @@ async def url_handler(message: Message):
     if message.from_user is None:
         return
     for entity in message.entities:
+        if entity != "url":
+            return
         log.debug(entity)
         url = entity.extract_from(message.text)
         log.info(f"'{url}' received from {message.from_user.username} in {message.chat.title or 'DM'}")
