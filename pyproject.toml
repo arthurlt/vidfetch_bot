@@ -33,6 +33,13 @@ dependencies = [
 dynamic = ["version"]
 # version = "0.0.1"
 
+[dependency-groups]
+dev = [
+    "ruff>=0.14.13",
+    "pytest>=9.0.2",
+    "pytest-cov>=7.0.0"
+]
+
 [project.urls]
 Homepage = "https://github.com/arthurlt/vidfetch_bot"
 Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
@@ -47,11 +54,8 @@ exclude = [".venv"]
 line-length = 120
 
 [tool.uv]
-dev-dependencies = [
-    "ruff>=0.14.13",
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0"
-]
+
+[tool.ty]
 
 [tool.pyright]
 venvPath = ".venv"
