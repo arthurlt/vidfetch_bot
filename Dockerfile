@@ -1,21 +1,20 @@
-FROM python:3.11-slim-bookworm
+FROM ghcr.io/astral-sh/uv:python3.14-trixie-slim
 
 WORKDIR /app
 
 # immediately print stdout/stderr
 ENV PYTHONUNBUFFERED=1 \
-    # disable the pip version warning
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    # useless in container
-    PIP_NO_CACHE_DIR=1 \
+    UV_NO_CACHE=1 \
+    UV_SYSTEM_PYTHON=1 \
+    UV_NO_DEV=1 \
+    UV_COMPILE_BYTECODE=1 \
     # put pip packages on PATH
     PATH=/app/.local/bin:${PATH}
 
-ARG PACKAGE_VERSION
 RUN set -ex &&\
     # add python group & user
-    groupadd --gid 1000 python &&\
-    useradd --uid 1000 --gid 1000 --home /app python &&\
+    groupadd --gid 999 python &&\
+    useradd --uid 999 --gid 999 --home /app python &&\
     # ensure /app is owned by the python user
     chown python:python /app &&\
     # install ffmpeg
@@ -26,8 +25,9 @@ RUN set -ex &&\
     apt clean -y &&\
     rm -rf /var/lib/apt/lists/*
 
-USER python
+ARG PACKAGE_VERSION
+RUN uv pip install vidfetch_bot==${PACKAGE_VERSION}
 
-RUN pip install vidfetch_bot==${PACKAGE_VERSION}
+USER python
 
 CMD [ "python3", "-m", "vidfetch_bot" ]
