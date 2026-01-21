@@ -54,3 +54,5 @@ def generate_response(message: Message, video: Video) -> SendVideo | SetMessageR
                 caption=generate_caption(video),
                 disable_notification=True,
             )
+        case _:
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🤯")])
