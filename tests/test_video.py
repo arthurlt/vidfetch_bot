@@ -65,6 +65,7 @@ class ValidVideoTestCase(unittest.TestCase):
         self.assertListEqual(cm.output, ["INFO:vidfetch_bot.video:Deleting 'mock_path'"])
         mock_remove.assert_called_with("mock_path")
 
+
 class ValidVideoNoDimensionsTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")
     def setUp(self, mock_info):
