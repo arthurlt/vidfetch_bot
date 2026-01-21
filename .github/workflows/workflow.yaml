@@ -43,7 +43,9 @@ jobs:
         run: uv sync --locked --all-extras --dev
 
       - name: "Test package"
-        run: uv run pytest tests
+        run: |
+          uv run ty check
+          uv run pytest tests
 
       - name: "Lint package"
         run: uv run ruff check --output-format=github .
