@@ -1,20 +1,27 @@
+from typing import Any
 import unittest
 from unittest.mock import patch, MagicMock
 
-from vidfetch_bot.video import Video, InvalidReason
+from vidfetch_bot.video import Video, VideoDimensions, InvalidReason
+
+
+def generate_mock_info() -> dict[str, Any]:
+    return {
+        "title": "Video Title",
+        "description": "Video description",
+        "duration": 133.4,
+        "height": 480,
+        "width": 360,
+        "aspect_ratio": 0.75,
+        "filesize": 9001,
+        "formats": [{"height": 480, "width": 360, "aspect_ratio": 0.75}],
+    }
 
 
 class ValidVideoTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")
     def setUp(self, mock_info):
-        mock_info.return_value = {
-            "title": "Valid Video Title",
-            "description": "Valid video description",
-            "duration": 133.4,
-            "height": 480,
-            "width": 360,
-            "filesize": 9001,
-        }
+        mock_info.return_value = generate_mock_info()
         self.video = Video("https://mock.example/video")
 
     def test_is_valid(self):
@@ -23,19 +30,20 @@ class ValidVideoTestCase(unittest.TestCase):
 
     def test_title(self):
         self.assertIsInstance(self.video.title, str)
-        self.assertEqual(self.video.title, "Valid Video Title")
+        self.assertEqual(self.video.title, "Video Title")
 
     def test_description(self):
         self.assertIsInstance(self.video.description, str)
-        self.assertEqual(self.video.description, "Valid video description")
+        self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
         self.assertIsInstance(self.video.duration, int)
         self.assertEqual(self.video.duration, 133)
 
     def test_dimensions(self):
-        self.assertIsInstance(self.video.dimensions, tuple)
-        self.assertTupleEqual(self.video.dimensions, (480, 360))
+        self.assertIsInstance(self.video.dimensions, VideoDimensions)
+        self.assertEqual(self.video.dimensions.width, 360)
+        self.assertEqual(self.video.dimensions.height, 480)
 
     def test_filesize(self):
         self.assertIsInstance(self.video.filesize, int)
@@ -69,12 +77,10 @@ class ValidVideoTestCase(unittest.TestCase):
 class ValidVideoNoDimensionsTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")
     def setUp(self, mock_info):
-        mock_info.return_value = {
-            "title": "Valid Video Title",
-            "description": "Valid video description",
-            "duration": 133.4,
-            "filesize": 9001,
-        }
+        no_dimensions_info = generate_mock_info()
+        del no_dimensions_info["width"]
+        del no_dimensions_info["height"]
+        mock_info.return_value = no_dimensions_info
         self.video = Video("https://mock.example/video")
 
     def test_is_valid(self):
@@ -83,19 +89,20 @@ class ValidVideoNoDimensionsTestCase(unittest.TestCase):
 
     def test_title(self):
         self.assertIsInstance(self.video.title, str)
-        self.assertEqual(self.video.title, "Valid Video Title")
+        self.assertEqual(self.video.title, "Video Title")
 
     def test_description(self):
         self.assertIsInstance(self.video.description, str)
-        self.assertEqual(self.video.description, "Valid video description")
+        self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
         self.assertIsInstance(self.video.duration, int)
         self.assertEqual(self.video.duration, 133)
 
     def test_dimensions(self):
-        self.assertIsInstance(self.video.dimensions, tuple)
-        self.assertTupleEqual(self.video.dimensions, (0, 0))
+        self.assertIsInstance(self.video.dimensions, VideoDimensions)
+        self.assertEqual(self.video.dimensions.width, 0)
+        self.assertEqual(self.video.dimensions.height, 0)
 
     def test_filesize(self):
         self.assertIsInstance(self.video.filesize, int)
@@ -129,14 +136,9 @@ class ValidVideoNoDimensionsTestCase(unittest.TestCase):
 class BigVideoTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")
     def setUp(self, mock_info):
-        mock_info.return_value = {
-            "title": "Big Video Title",
-            "description": "Big video description",
-            "duration": 133.4,
-            "height": 480,
-            "width": 360,
-            "filesize": 52428801,
-        }
+        big_video_info = generate_mock_info()
+        big_video_info["filesize"] = 52428801
+        mock_info.return_value = big_video_info
         with self.assertLogs("vidfetch_bot.video", "INFO"):
             self.video = Video("https://mock.example/video")
 
@@ -146,19 +148,20 @@ class BigVideoTestCase(unittest.TestCase):
 
     def test_title(self):
         self.assertIsInstance(self.video.title, str)
-        self.assertEqual(self.video.title, "Big Video Title")
+        self.assertEqual(self.video.title, "Video Title")
 
     def test_description(self):
         self.assertIsInstance(self.video.description, str)
-        self.assertEqual(self.video.description, "Big video description")
+        self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
         self.assertIsInstance(self.video.duration, int)
         self.assertEqual(self.video.duration, 133)
 
     def test_dimensions(self):
-        self.assertIsInstance(self.video.dimensions, tuple)
-        self.assertTupleEqual(self.video.dimensions, (480, 360))
+        self.assertIsInstance(self.video.dimensions, VideoDimensions)
+        self.assertEqual(self.video.dimensions.width, 360)
+        self.assertEqual(self.video.dimensions.height, 480)
 
     def test_filesize(self):
         self.assertIsInstance(self.video.filesize, int)
@@ -183,14 +186,9 @@ class BigVideoTestCase(unittest.TestCase):
 class LongVideoTestCase(unittest.TestCase):
     @patch("vidfetch_bot.video.YoutubeDL.extract_info")
     def setUp(self, mock_info):
-        mock_info.return_value = {
-            "title": "Long Video Title",
-            "description": "Long video description",
-            "duration": 601,
-            "height": 480,
-            "width": 360,
-            "filesize": 9001,
-        }
+        long_video_info = generate_mock_info()
+        long_video_info["duration"] = 601
+        mock_info.return_value = long_video_info
         with self.assertLogs("vidfetch_bot.video", "INFO"):
             self.video = Video("https://mock.example/video")
 
@@ -200,19 +198,20 @@ class LongVideoTestCase(unittest.TestCase):
 
     def test_title(self):
         self.assertIsInstance(self.video.title, str)
-        self.assertEqual(self.video.title, "Long Video Title")
+        self.assertEqual(self.video.title, "Video Title")
 
     def test_description(self):
         self.assertIsInstance(self.video.description, str)
-        self.assertEqual(self.video.description, "Long video description")
+        self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
         self.assertIsInstance(self.video.duration, int)
         self.assertEqual(self.video.duration, 601)
 
     def test_dimensions(self):
-        self.assertIsInstance(self.video.dimensions, tuple)
-        self.assertTupleEqual(self.video.dimensions, (480, 360))
+        self.assertIsInstance(self.video.dimensions, VideoDimensions)
+        self.assertEqual(self.video.dimensions.width, 360)
+        self.assertEqual(self.video.dimensions.height, 480)
 
     def test_filesize(self):
         self.assertIsInstance(self.video.filesize, int)

@@ -1,10 +1,19 @@
+import subprocess
+import os
+from typing import Optional
+from collections import Counter
 import logging
 import os.path
 import tempfile
+from dataclasses import dataclass
 from enum import Enum, auto
+import json
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError, ExtractorError, UnsupportedError
+
+
+logger = logging.getLogger(__name__)
 
 
 class InvalidReason(Enum):
@@ -15,8 +24,13 @@ class InvalidReason(Enum):
     UNAUTHORIZED = auto()
 
 
+@dataclass
+class VideoDimensions:
+    width: int
+    height: int
+
+
 class Video:
-    log: logging.Logger
     max_duration = 600  # 10 minutes
     max_filesize = 50 * 1024 * 1024  # 50 mebibytes
     temp_file_dir = tempfile.gettempdir()
@@ -27,10 +41,9 @@ class Video:
     }
 
     def __init__(self, url: str):
-        self.log = logging.getLogger(__name__)
         self.url = url
         self.info = {}
-        self.file_path: str | None = None
+        self.file_path: Optional[str] = None
         self.invalid_reason = self.__validate()
 
     @property
@@ -44,7 +57,7 @@ class Video:
         return self.info["title"]
 
     @property
-    def description(self) -> str | None:
+    def description(self) -> Optional[str]:
         if not self.info:
             raise KeyError
         return self.info.get("description")
@@ -56,17 +69,41 @@ class Video:
         return int(self.info["duration"])
 
     @property
-    def dimensions(self) -> tuple[int, int]:
+    def dimensions(self) -> VideoDimensions:
         if not self.info:
             raise KeyError
-        if not self.info.get("height"):
-            self.info["height"] = 0
-        if not self.info.get("width"):
-            self.info["width"] = 0
-        return self.info["height"], self.info["width"]
+        try:
+            if not self.file_path:
+                raise KeyError
+            probe_output = subprocess.check_output(
+                [
+                    "ffprobe",
+                    "-v",
+                    "error",
+                    "-select_streams",
+                    "v",
+                    "-show_streams",
+                    "-print_format",
+                    "json",
+                    self.file_path,
+                ]
+            )
+            probe_data = json.loads(probe_output)
+            return VideoDimensions(probe_data["streams"][0]["width"], probe_data["streams"][0]["height"])
+        except Exception as e:
+            logger.warning(f"Failed to use ffprobe: {e}")
+            if not self.info.get("width"):
+                self.info["width"] = 0
+            if not self.info.get("height"):
+                self.info["height"] = 0
+            # Workaround when the format ytdlp selects has the width and height swapped for some reason
+            ratios = [format.get("aspect_ratio") for format in self.info["formats"]]
+            if Counter(ratios)[self.info["aspect_ratio"]] == 1 and len(ratios) >= 3:
+                return VideoDimensions(self.info["height"], self.info["width"])
+            return VideoDimensions(self.info["width"], self.info["height"])
 
     @property
-    def filesize(self) -> int | None:
+    def filesize(self) -> Optional[int]:
         if not self.info:
             raise KeyError
         if self.info.get("filesize"):
@@ -74,15 +111,15 @@ class Video:
         if self.info.get("filesize_approx"):
             return int(self.info["filesize_approx"])
 
-    def __validate(self) -> InvalidReason | None:
+    def __validate(self) -> Optional[InvalidReason]:
         if not self.info:
             try:
-                self.log.debug(f"Retrieving info for '{self.url}'")
-                opts = self.common_opts | {"logger": self.log}
+                logger.debug(f"Retrieving info for '{self.url}'")
+                opts = self.common_opts | {"logger": logger}
                 with YoutubeDL(opts) as ydl:
                     self.info = ydl.extract_info(self.url, download=False)
             except DownloadError as e:
-                self.log.debug(e.exc_info)
+                logger.debug(e.exc_info)
                 match e.exc_info:
                     case (_, UnsupportedError(), *_):
                         return InvalidReason.UNSUPPORTED_URL
@@ -92,31 +129,31 @@ class Video:
                         return InvalidReason.DOWNLOAD_FAILED
 
         if self.duration > self.max_duration:
-            self.log.warning(f"'{self.title}' is greater than {self.max_duration} seconds")
+            logger.warning(f"'{self.title}' is greater than {self.max_duration} seconds")
             return InvalidReason.VIDEO_TOO_LONG
 
         if self.filesize and self.filesize > self.max_filesize:
-            self.log.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
+            logger.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
             return InvalidReason.FILE_TOO_BIG
 
     def __post_hook(self, filename: str):
-        self.log.info(f"Downloaded video to '{filename}'")
+        logger.info(f"Downloaded video to '{filename}'")
         self.__actual_filesize = os.path.getsize(filename)
         if self.__actual_filesize > self.max_filesize:
             self.invalid_reason = InvalidReason.FILE_TOO_BIG
-            self.log.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
+            logger.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
             self.delete()
             return
         self.file_path = filename
 
     def download(self):
         if not self.is_valid:
-            self.log.warning("Invalid video, won't download")
+            logger.warning("Invalid video, won't download")
             return
-        self.log.info("Downloading video")
+        logger.info("Downloading video")
         opts = self.common_opts | {
             "concurrent_fragment_downloads": 8,
-            "logger": self.log,
+            "logger": logger,
             "noprogress": True,
             "paths": {"home": self.temp_file_dir, "temp": self.temp_file_dir},
             "post_hooks": [self.__post_hook],
@@ -127,7 +164,7 @@ class Video:
 
     def delete(self):
         if not self.file_path:
-            self.log.warning("No file to delete")
+            logger.warning("No file to delete")
             return
-        self.log.info(f"Deleting '{self.file_path}'")
+        logger.info(f"Deleting '{self.file_path}'")
         os.remove(self.file_path)

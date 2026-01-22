@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, create_autospec
 from aiogram.types import Message, ReactionTypeEmoji
 
 from vidfetch_bot import utils
-from vidfetch_bot.video import InvalidReason
+from vidfetch_bot.video import InvalidReason, Video, VideoDimensions
 
 
 class GenerateCaptionTestCases(unittest.TestCase):
@@ -86,10 +86,10 @@ class GenerateResponseTestCases(unittest.TestCase):
         self.assertIsNotNone(actual)
 
     def test_valid_video(self):
-        video = MagicMock()
+        video = MagicMock(Video)
         video.invalid_reason = None
         video.file_path = "mock/path"
-        video.dimensions = (1080, 1920)
+        video.dimensions = VideoDimensions(1920, 1080)
         video.duration = 300
         video.description = "Mock description"
         message = create_autospec(Message)
