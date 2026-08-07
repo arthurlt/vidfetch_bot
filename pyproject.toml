@@ -45,7 +45,7 @@ exclude = [".venv"]
 line-length = 120
 
 [tool.uv]
-exclude-newer = "7 days"
+exclude-newer = "1 week"
 
 [tool.ty]
 
