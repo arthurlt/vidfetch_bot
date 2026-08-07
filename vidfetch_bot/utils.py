@@ -7,6 +7,8 @@ from aiogram.types import FSInputFile, Message, ReactionTypeEmoji
 
 from vidfetch_bot.video import InvalidReason, Video
 
+logger = logging.getLogger(__name__)
+
 
 def generate_caption(video: Video) -> str:
     # use video title if no description
@@ -29,7 +31,6 @@ def generate_caption(video: Video) -> str:
 
 
 def generate_response(message: Message, video: Video) -> SendVideo | SetMessageReaction:
-    log = logging.getLogger(__name__)
     match video.invalid_reason:
         case InvalidReason.FILE_TOO_BIG:
             return message.react(reaction=[ReactionTypeEmoji(emoji="🐳")])
@@ -44,13 +45,14 @@ def generate_response(message: Message, video: Video) -> SendVideo | SetMessageR
         case None:
             if not video.file_path:
                 raise FileNotFoundError(f"No file path for {video.title}")
-            log.info("Sending video")
-            height, width = video.dimensions
+            logger.info("Sending video")
             return message.reply_video(
                 video=FSInputFile(video.file_path),
                 duration=video.duration,
-                height=height,
-                width=width,
+                height=video.dimensions.height,
+                width=video.dimensions.width,
                 caption=generate_caption(video),
                 disable_notification=True,
             )
+        case _:
+            return message.react(reaction=[ReactionTypeEmoji(emoji="🤯")])

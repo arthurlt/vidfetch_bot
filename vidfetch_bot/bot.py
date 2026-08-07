@@ -21,6 +21,7 @@ dp = Dispatcher()
 dp.message.middleware(ChatActionMiddleware())
 bot = Bot(token=bot_token, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
+
 def start():
     dp.include_router(handle)
     dp.run_polling(bot)

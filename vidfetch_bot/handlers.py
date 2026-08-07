@@ -9,6 +9,7 @@ from vidfetch_bot import utils
 from vidfetch_bot.filters import EntityTypeFilter
 from vidfetch_bot.video import Video
 
+logger = logging.getLogger(__name__)
 handle = Router()
 
 
@@ -16,7 +17,6 @@ handle = Router()
 @handle.message(EntityTypeFilter(MessageEntityType.URL))
 @flags.chat_action(action=ChatAction.UPLOAD_VIDEO)
 async def url_handler(message: Message):
-    log = logging.getLogger(__name__)
     if message.entities is None:
         return
     if message.text is None:
@@ -24,9 +24,9 @@ async def url_handler(message: Message):
     if message.from_user is None:
         return
     for entity in message.entities:
-        log.debug(entity)
+        logger.debug(entity)
         url = entity.extract_from(message.text)
-        log.info(f"'{url}' received from {message.from_user.username} in {message.chat.title or 'DM'}")
+        logger.info(f"'{url}' received from {message.from_user.username} in {message.chat.title or 'DM'}")
 
         video = Video(url)
         if video.is_valid:
@@ -43,5 +43,6 @@ async def url_handler(message: Message):
 async def command_start_handler(message: Message):
     """This handler receives messages with `/start` command"""
     await message.answer("DM me your videos or add me to your group chats!")
+
 
 # TODO: respond to DMs asking what reaction emojis mean
