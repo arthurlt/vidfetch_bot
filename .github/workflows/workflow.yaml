@@ -89,7 +89,7 @@ jobs:
 
   #   steps:
   #     - name: Download artifacts
-  #       uses: actions/download-artifact@v4
+  #       uses: actions/download-artifact@v8
   #       with:
   #         name: python-package-distributions
   #         path: dist/
@@ -113,7 +113,7 @@ jobs:
 
     steps:
       - name: "Download artifacts"
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: python-package-distributions
           path: dist/
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: "Get package metadata"
-        uses: docker/metadata-action@v5.7.0
+        uses: docker/metadata-action@v6.2.0
         id: metadata
         with:
           images: |
@@ -152,10 +152,10 @@ jobs:
         uses: docker/setup-qemu-action@v4
 
       - name: "Set up Docker Buildx"
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: "Build and push"
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           build-args: |
             PACKAGE_VERSION=${{ steps.metadata.outputs.version }}
