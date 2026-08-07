@@ -10,7 +10,7 @@ on:
 
 permissions:
   checks: write
-  code-quality: write
+  # code-quality: write
   contents: read
   packages: write
   pull-requests: write
