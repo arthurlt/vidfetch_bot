@@ -83,8 +83,8 @@ convention = "numpy"
 
 [tool.pytest.ini_options]
 addopts = [
-    # '--cov-fail-under=98',
-    '--cov-report=html:pytest',
-    '--cov-report=term-missing',
-    '--junitxml=coverage.xml',
+    # "--cov-fail-under=98",
+    "--cov=tests",
+    "--cov-report=xml:coverage.xml",
+    "--cov-report=term-missing",
 ]

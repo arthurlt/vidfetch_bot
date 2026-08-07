@@ -42,10 +42,13 @@ jobs:
       - name: "Install dependencies"
         run: uv sync --locked --all-extras --dev
 
+      - name: "Type-check package"
+        run: uv run ty check
+        env:
+          TY_OUTPUT_FORMAT: "github"
+
       - name: "Test package"
-        run: |
-          uv run ty check
-          uv run pytest tests --cov-report markdown-append:$GITHUB_STEP_SUMMARY
+        run: uv run pytest --cov-report markdown-append:$GITHUB_STEP_SUMMARY
 
       - name: "Lint package"
         run: |
