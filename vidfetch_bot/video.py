@@ -1,17 +1,14 @@
-import subprocess
-import os
-from typing import Optional
-from collections import Counter
+import json
 import logging
-import os.path
+import subprocess
 import tempfile
+from collections import Counter
 from dataclasses import dataclass
 from enum import Enum, auto
-import json
+from pathlib import Path
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError, ExtractorError, UnsupportedError
-
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +40,7 @@ class Video:
     def __init__(self, url: str):
         self.url = url
         self.info = {}
-        self.file_path: Optional[str] = None
+        self.file_path: str | None = None
         self.invalid_reason = self.__validate()
 
     @property
@@ -57,7 +54,7 @@ class Video:
         return self.info["title"]
 
     @property
-    def description(self) -> Optional[str]:
+    def description(self) -> str | None:
         if not self.info:
             raise KeyError
         return self.info.get("description")
@@ -103,15 +100,16 @@ class Video:
             return VideoDimensions(self.info["width"], self.info["height"])
 
     @property
-    def filesize(self) -> Optional[int]:
+    def filesize(self) -> int | None:
         if not self.info:
             raise KeyError
         if self.info.get("filesize"):
             return int(self.info["filesize"])
         if self.info.get("filesize_approx"):
             return int(self.info["filesize_approx"])
+        return None
 
-    def __validate(self) -> Optional[InvalidReason]:
+    def __validate(self) -> InvalidReason | None:
         if not self.info:
             try:
                 logger.debug(f"Retrieving info for '{self.url}'")
@@ -135,10 +133,11 @@ class Video:
         if self.filesize and self.filesize > self.max_filesize:
             logger.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
             return InvalidReason.FILE_TOO_BIG
+        return None
 
     def __post_hook(self, filename: str):
         logger.info(f"Downloaded video to '{filename}'")
-        self.__actual_filesize = os.path.getsize(filename)
+        self.__actual_filesize = Path(filename).stat().st_size
         if self.__actual_filesize > self.max_filesize:
             self.invalid_reason = InvalidReason.FILE_TOO_BIG
             logger.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
@@ -167,4 +166,4 @@ class Video:
             logger.warning("No file to delete")
             return
         logger.info(f"Deleting '{self.file_path}'")
-        os.remove(self.file_path)
+        Path(self.file_path).unlink()

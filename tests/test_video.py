@@ -1,8 +1,8 @@
-from typing import Any
 import unittest
-from unittest.mock import patch, MagicMock
+from typing import Any
+from unittest.mock import MagicMock, patch
 
-from vidfetch_bot.video import Video, VideoDimensions, InvalidReason
+from vidfetch_bot.video import InvalidReason, Video, VideoDimensions
 
 
 def generate_mock_info() -> dict[str, Any]:

@@ -41,19 +41,37 @@ Issues = "https://github.com/arthurlt/vidfetch_bot/issues"
 include = ["vidfetch_bot"]
 
 [tool.ruff]
-exclude = [".venv"]
 line-length = 120
 
 [tool.uv]
 exclude-newer = "1 week"
 
-[tool.ty]
+[tool.ruff.lint]
+extend-select = [
+    "F",        # Pyflakes rules
+    "W",        # PyCodeStyle warnings
+    "E",        # PyCodeStyle errors
+    "I",        # Sort imports properly
+    "UP",       # Warn if certain things can changed due to newer Python versions
+    "C4",       # Catch incorrect use of comprehensions, dict, list, etc
+    "FA",       # Enforce from __future__ import annotations
+    "ISC",      # Good use of string concatenation
+    "ICN",      # Use common import conventions
+    "RET",      # Good return practices
+    "SIM",      # Common simplification rules
+    "TID",      # Some good import practices
+    "TC",       # Enforce importing certain types in a TYPE_CHECKING block
+    "PTH",      # Use pathlib instead of os.path
+    # "TD",       # Be diligent with TODO comments
+    "NPY",      # Some numpy-specific things
+    "FURB",     # Suggest more idiomatic Python patterns
+    # "D",        # 
+]
 
-[tool.pyright]
-venvPath = ".venv"
-# typeCheckingMode = "strict"
-include = ["vidfetch_bot/**", "tests/**"]
-exclude = [".venv/**"]
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ty]
 
 [tool.pytest.ini_options]
 addopts = [
