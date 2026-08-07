@@ -62,44 +62,44 @@ class Video:
         return self.info.get("description")
 
     @property
-    def duration(self) -> float | None:
+    def duration(self) -> int | None:
         if not self.info:
             raise KeyError
-        return self.info.get("duration")
+        duration = self.info.get("duration")
+        return int(duration) if duration is not None else None
 
     @property
     def dimensions(self) -> VideoDimensions:
         if not self.info:
             raise KeyError
-        try:
-            if not self.file_path:
-                raise KeyError
-            probe_output = subprocess.check_output(
-                [
-                    "ffprobe",
-                    "-v",
-                    "error",
-                    "-select_streams",
-                    "v",
-                    "-show_streams",
-                    "-print_format",
-                    "json",
-                    self.file_path,
-                ]
-            )
-            probe_data = json.loads(probe_output)
-            return VideoDimensions(probe_data["streams"][0]["width"], probe_data["streams"][0]["height"])
-        except CalledProcessError as e:
-            logger.warning(f"Failed to use ffprobe: {e}")
-            if not self.info.get("width"):
-                self.info["width"] = 0
-            if not self.info.get("height"):
-                self.info["height"] = 0
-            # Workaround when the format ytdlp selects has the width and height swapped for some reason
-            ratios = [format.get("aspect_ratio") for format in self.info["formats"]]
-            if Counter(ratios)[self.info["aspect_ratio"]] == 1 and len(ratios) >= 3:
-                return VideoDimensions(self.info["height"], self.info["width"])
-            return VideoDimensions(self.info["width"], self.info["height"])
+        if self.file_path:
+            try:
+                probe_output = subprocess.check_output(
+                    [
+                        "ffprobe",
+                        "-v",
+                        "error",
+                        "-select_streams",
+                        "v",
+                        "-show_streams",
+                        "-print_format",
+                        "json",
+                        self.file_path,
+                    ]
+                )
+                probe_data = json.loads(probe_output)
+                return VideoDimensions(probe_data["streams"][0]["width"], probe_data["streams"][0]["height"])
+            except CalledProcessError as e:
+                logger.warning(f"Failed to use ffprobe: {e}")
+        if not self.info.get("width"):
+            self.info["width"] = 0
+        if not self.info.get("height"):
+            self.info["height"] = 0
+        # Workaround when the format ytdlp selects has the width and height swapped for some reason
+        ratios = [format.get("aspect_ratio") for format in self.info["formats"]]
+        if Counter(ratios)[self.info["aspect_ratio"]] == 1 and len(ratios) >= 3:
+            return VideoDimensions(self.info["height"], self.info["width"])
+        return VideoDimensions(self.info["width"], self.info["height"])
 
     @property
     def filesize(self) -> int | None:

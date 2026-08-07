@@ -37,8 +37,8 @@ class ValidVideoTestCase(unittest.TestCase):
         self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
-        self.assertIsInstance(self.video.duration, float)
-        self.assertEqual(self.video.duration, 133.4)
+        self.assertIsInstance(self.video.duration, int)
+        self.assertEqual(self.video.duration, 133)
 
     def test_dimensions(self):
         self.assertIsInstance(self.video.dimensions, VideoDimensions)
@@ -96,8 +96,8 @@ class ValidVideoNoDimensionsTestCase(unittest.TestCase):
         self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
-        self.assertIsInstance(self.video.duration, float)
-        self.assertEqual(self.video.duration, 133.4)
+        self.assertIsInstance(self.video.duration, int)
+        self.assertEqual(self.video.duration, 133)
 
     def test_dimensions(self):
         self.assertIsInstance(self.video.dimensions, VideoDimensions)
@@ -155,8 +155,8 @@ class BigVideoTestCase(unittest.TestCase):
         self.assertEqual(self.video.description, "Video description")
 
     def test_duration(self):
-        self.assertIsInstance(self.video.duration, float)
-        self.assertEqual(self.video.duration, 133.4)
+        self.assertIsInstance(self.video.duration, int)
+        self.assertEqual(self.video.duration, 133)
 
     def test_dimensions(self):
         self.assertIsInstance(self.video.dimensions, VideoDimensions)
