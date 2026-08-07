@@ -78,5 +78,5 @@ addopts = [
     # '--cov-fail-under=98',
     '--cov-report=html:pytest',
     '--cov-report=term-missing',
-    '--junitxml=junit/test-results.xml',
+    '--junitxml=coverage.xml',
 ]

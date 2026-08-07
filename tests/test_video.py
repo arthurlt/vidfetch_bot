@@ -65,13 +65,13 @@ class ValidVideoTestCase(unittest.TestCase):
         self.assertListEqual(cm.output, ["INFO:vidfetch_bot.video:Downloading video"])
         self.assertLogs(self.video.file_path, "mock_path")
 
-    @patch("vidfetch_bot.video.os.remove")
-    def test_delete(self, mock_remove):
+    @patch("pathlib.Path.unlink")
+    def test_delete(self, mock_unlink):
         self.video.file_path = "mock_path"
         with self.assertLogs("vidfetch_bot.video", "INFO") as cm:
             self.video.delete()
         self.assertListEqual(cm.output, ["INFO:vidfetch_bot.video:Deleting 'mock_path'"])
-        mock_remove.assert_called_with("mock_path")
+        mock_unlink.assert_called_once()
 
 
 class ValidVideoNoDimensionsTestCase(unittest.TestCase):
@@ -124,13 +124,13 @@ class ValidVideoNoDimensionsTestCase(unittest.TestCase):
         self.assertListEqual(cm.output, ["INFO:vidfetch_bot.video:Downloading video"])
         self.assertLogs(self.video.file_path, "mock_path")
 
-    @patch("vidfetch_bot.video.os.remove")
-    def test_delete(self, mock_remove):
+    @patch("pathlib.Path.unlink")
+    def test_delete(self, mock_unlink):
         self.video.file_path = "mock_path"
         with self.assertLogs("vidfetch_bot.video", "INFO") as cm:
             self.video.delete()
         self.assertListEqual(cm.output, ["INFO:vidfetch_bot.video:Deleting 'mock_path'"])
-        mock_remove.assert_called_with("mock_path")
+        mock_unlink.assert_called_once()
 
 
 class BigVideoTestCase(unittest.TestCase):
