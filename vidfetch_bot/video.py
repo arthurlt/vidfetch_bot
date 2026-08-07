@@ -6,11 +6,21 @@ from collections import Counter
 from dataclasses import dataclass
 from enum import Enum, auto
 from pathlib import Path
+from subprocess import CalledProcessError
 
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError, ExtractorError, UnsupportedError
 
 logger = logging.getLogger(__name__)
+
+
+MAX_DURATION = 600  # 10 minutes
+MAX_FILESIZE = 50 * 1024 * 1024  # 50 mebibytes
+COMMON_OPTS = {
+    "format": f"best[filesize<{MAX_FILESIZE}] / best[filesize_approx<{MAX_FILESIZE}] / bv*+ba / b",
+    "format_sort": ["vcodec:avc", "res", "acodec:aac"],
+    "max_filesize": MAX_FILESIZE,
+}
 
 
 class InvalidReason(Enum):
@@ -28,20 +38,12 @@ class VideoDimensions:
 
 
 class Video:
-    max_duration = 600  # 10 minutes
-    max_filesize = 50 * 1024 * 1024  # 50 mebibytes
-    temp_file_dir = tempfile.gettempdir()
-    common_opts = {
-        "format": f"best[filesize<{max_filesize}] / best[filesize_approx<{max_filesize}] / bv*+ba / b",
-        "format_sort": ["vcodec:avc", "res", "acodec:aac"],
-        "max_filesize": max_filesize,
-    }
-
     def __init__(self, url: str):
         self.url = url
         self.info = {}
         self.file_path: str | None = None
         self.invalid_reason = self.__validate()
+        self.temp_file_dir = tempfile.gettempdir()
 
     @property
     def is_valid(self) -> bool:
@@ -60,10 +62,10 @@ class Video:
         return self.info.get("description")
 
     @property
-    def duration(self) -> int:
+    def duration(self) -> float | None:
         if not self.info:
             raise KeyError
-        return int(self.info["duration"])
+        return self.info.get("duration")
 
     @property
     def dimensions(self) -> VideoDimensions:
@@ -87,7 +89,7 @@ class Video:
             )
             probe_data = json.loads(probe_output)
             return VideoDimensions(probe_data["streams"][0]["width"], probe_data["streams"][0]["height"])
-        except Exception as e:
+        except CalledProcessError as e:
             logger.warning(f"Failed to use ffprobe: {e}")
             if not self.info.get("width"):
                 self.info["width"] = 0
@@ -113,7 +115,7 @@ class Video:
         if not self.info:
             try:
                 logger.debug(f"Retrieving info for '{self.url}'")
-                opts = self.common_opts | {"logger": logger}
+                opts = COMMON_OPTS | {"logger": logger}
                 with YoutubeDL(opts) as ydl:
                     self.info = ydl.extract_info(self.url, download=False)
             except DownloadError as e:
@@ -126,21 +128,21 @@ class Video:
                     case _:
                         return InvalidReason.DOWNLOAD_FAILED
 
-        if self.duration > self.max_duration:
-            logger.warning(f"'{self.title}' is greater than {self.max_duration} seconds")
+        if self.duration and (self.duration > MAX_DURATION):
+            logger.warning(f"'{self.title}' is greater than {MAX_DURATION} seconds")
             return InvalidReason.VIDEO_TOO_LONG
 
-        if self.filesize and self.filesize > self.max_filesize:
-            logger.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
+        if self.filesize and (self.filesize > MAX_FILESIZE):
+            logger.warning(f"'{self.title}' is bigger than {MAX_FILESIZE} bytes")
             return InvalidReason.FILE_TOO_BIG
         return None
 
     def __post_hook(self, filename: str):
         logger.info(f"Downloaded video to '{filename}'")
         self.__actual_filesize = Path(filename).stat().st_size
-        if self.__actual_filesize > self.max_filesize:
+        if self.__actual_filesize > MAX_FILESIZE:
             self.invalid_reason = InvalidReason.FILE_TOO_BIG
-            logger.warning(f"'{self.title}' is bigger than {self.max_filesize} bytes")
+            logger.warning(f"'{self.title}' is bigger than {MAX_FILESIZE} bytes")
             self.delete()
             return
         self.file_path = filename
@@ -150,7 +152,7 @@ class Video:
             logger.warning("Invalid video, won't download")
             return
         logger.info("Downloading video")
-        opts = self.common_opts | {
+        opts = COMMON_OPTS | {
             "concurrent_fragment_downloads": 8,
             "logger": logger,
             "noprogress": True,
