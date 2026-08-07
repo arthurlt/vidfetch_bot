@@ -14,6 +14,5 @@ class EntityTypeFilter(Filter):
     async def __call__(self, message: Message) -> bool:
         if message.entities is None:
             return False
-        else:
-            logger.debug(message.entities)
-            return any([self.filter_type in entity.type for entity in message.entities])
+        logger.debug(message.entities)
+        return any(self.filter_type in entity.type for entity in message.entities)
