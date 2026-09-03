@@ -1,4 +1,4 @@
-FROM ghcr.io/denoland/deno:bin-2.9.5 as deno
+FROM ghcr.io/denoland/deno:bin-2.9.6 as deno
 
 FROM ghcr.io/astral-sh/uv:python3.14-trixie-slim
 
